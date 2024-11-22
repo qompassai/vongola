@@ -1,7 +1,6 @@
 
-# Vongola: Secure reverse proxy 
+# Vongola: A Securely performant reverse proxy server for your Deep Tech needs
 
-<img src="./assets/discord.png" alt="discord-logo" width="200"/>
 
 # About
 
