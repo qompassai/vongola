@@ -1,0 +1,889 @@
+warning|:|crates/vongola/src/plugins/mod.rs|:|51|:|51|:|5|:|28|:|empty line after outer attribute|:|[0m[1m[33mwarning[0m[0m[1m: empty line after outer attribute[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/plugins/mod.rs:46:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m46[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m/[0m[0m [0m[0m    /// Create a new state for the middleware[0m
+[0m[1m[38;5;12m47[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|_^[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m51[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m    async fn request_filter([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[38;5;12m-----------------------[0m[0m [0m[0m[1m[38;5;12mthe attribute applies to this function[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#empty_line_after_outer_attr[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(clippy::empty_line_after_outer_attr)]` on by default[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: [0m[0mif the empty line is unintentional, remove it[0m
+
+|:|none
+warning|:|crates/vongola/src/plugins/mod.rs|:|46|:|47|:|5|:|1|:|empty line after outer attribute|:|[0m[1m[33mwarning[0m[0m[1m: empty line after outer attribute[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/plugins/mod.rs:46:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m46[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m/[0m[0m [0m[0m    /// Create a new state for the middleware[0m
+[0m[1m[38;5;12m47[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|_^[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m51[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m    async fn request_filter([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[38;5;12m-----------------------[0m[0m [0m[0m[1m[38;5;12mthe attribute applies to this function[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#empty_line_after_outer_attr[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(clippy::empty_line_after_outer_attr)]` on by default[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: [0m[0mif the empty line is unintentional, remove it[0m
+
+|:|none
+help|:|crates/vongola/src/plugins/mod.rs|:|46|:|47|:|46|:|1|:|if the empty line is unintentional, remove it|:|none|:|
+warning|:|crates/vongola/src/services/docker/mod.rs|:|9|:|9|:|47|:|75|:|unused imports: `ListContainersOptionsBuilder` and `ListServicesOptionsBuilder`|:|[0m[1m[33mwarning[0m[0m[1m: unused imports: `ListContainersOptionsBuilder` and `ListServicesOptionsBuilder`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/docker/mod.rs:9:47[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m9[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    query_parameters::{ListContainersOptions, ListContainersOptionsBuilder, ListServicesOptions, ListServicesOptionsBuilder},[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                                               [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m                       [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m  [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_imports)]` on by default[0m
+
+|:|none
+warning|:|crates/vongola/src/services/docker/mod.rs|:|9|:|9|:|98|:|124|:|unused imports: `ListContainersOptionsBuilder` and `ListServicesOptionsBuilder`|:|[0m[1m[33mwarning[0m[0m[1m: unused imports: `ListContainersOptionsBuilder` and `ListServicesOptionsBuilder`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/docker/mod.rs:9:47[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m9[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    query_parameters::{ListContainersOptions, ListContainersOptionsBuilder, ListServicesOptions, ListServicesOptionsBuilder},[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                                               [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m                       [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m  [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_imports)]` on by default[0m
+
+|:|none
+help|:|crates/vongola/src/services/docker/mod.rs|:|9|:|9|:|45|:|75|:|remove the unused imports|:|none|:|
+help|:|crates/vongola/src/services/docker/mod.rs|:|9|:|9|:|96|:|124|:|remove the unused imports|:|none|:|
+warning|:|crates/vongola/src/plugins/mod.rs|:|51|:|51|:|5|:|28|:|empty line after outer attribute|:|[0m[1m[33mwarning[0m[0m[1m: empty line after outer attribute[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/plugins/mod.rs:46:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m46[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m/[0m[0m [0m[0m    /// Create a new state for the middleware[0m
+[0m[1m[38;5;12m47[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|_^[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m51[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m    async fn request_filter([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[38;5;12m-----------------------[0m[0m [0m[0m[1m[38;5;12mthe attribute applies to this function[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#empty_line_after_outer_attr[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(clippy::empty_line_after_outer_attr)]` on by default[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: [0m[0mif the empty line is unintentional, remove it[0m
+
+|:|none
+warning|:|crates/vongola/src/plugins/mod.rs|:|46|:|47|:|5|:|1|:|empty line after outer attribute|:|[0m[1m[33mwarning[0m[0m[1m: empty line after outer attribute[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/plugins/mod.rs:46:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m46[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m/[0m[0m [0m[0m    /// Create a new state for the middleware[0m
+[0m[1m[38;5;12m47[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|_^[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m51[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m    async fn request_filter([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[38;5;12m-----------------------[0m[0m [0m[0m[1m[38;5;12mthe attribute applies to this function[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#empty_line_after_outer_attr[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(clippy::empty_line_after_outer_attr)]` on by default[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: [0m[0mif the empty line is unintentional, remove it[0m
+
+|:|none
+help|:|crates/vongola/src/plugins/mod.rs|:|46|:|47|:|46|:|1|:|if the empty line is unintentional, remove it|:|none|:|
+warning|:|crates/vongola/src/services/letsencrypt/http01.rs|:|27|:|27|:|1|:|30|:|empty line after doc comment|:|[0m[1m[33mwarning[0m[0m[1m: empty line after doc comment[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/letsencrypt/http01.rs:25:1[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m25[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m/[0m[0m [0m[0m/// API[0m
+[0m[1m[38;5;12m26[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|_^[0m
+[0m[1m[38;5;12m27[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0mpub struct LetsencryptService {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m[1m[38;5;12m-----------------------------[0m[0m [0m[0m[1m[38;5;12mthe comment documents this struct[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#empty_line_after_doc_comments[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(clippy::empty_line_after_doc_comments)]` on by default[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: [0m[0mif the empty line is unintentional, remove it[0m
+
+|:|none
+warning|:|crates/vongola/src/services/letsencrypt/http01.rs|:|25|:|26|:|1|:|1|:|empty line after doc comment|:|[0m[1m[33mwarning[0m[0m[1m: empty line after doc comment[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/letsencrypt/http01.rs:25:1[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m25[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m/[0m[0m [0m[0m/// API[0m
+[0m[1m[38;5;12m26[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|_^[0m
+[0m[1m[38;5;12m27[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0mpub struct LetsencryptService {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m[1m[38;5;12m-----------------------------[0m[0m [0m[0m[1m[38;5;12mthe comment documents this struct[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#empty_line_after_doc_comments[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(clippy::empty_line_after_doc_comments)]` on by default[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: [0m[0mif the empty line is unintentional, remove it[0m
+
+|:|none
+help|:|crates/vongola/src/services/letsencrypt/http01.rs|:|25|:|26|:|8|:|1|:|if the empty line is unintentional, remove it|:|none|:|
+warning|:|crates/vongola/src/services/docker/mod.rs|:|9|:|9|:|47|:|75|:|unused imports: `ListContainersOptionsBuilder` and `ListServicesOptionsBuilder`|:|[0m[1m[33mwarning[0m[0m[1m: unused imports: `ListContainersOptionsBuilder` and `ListServicesOptionsBuilder`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/docker/mod.rs:9:47[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m9[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    query_parameters::{ListContainersOptions, ListContainersOptionsBuilder, ListServicesOptions, ListServicesOptionsBuilder},[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                                               [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m                       [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m  [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_imports)]` on by default[0m
+
+|:|none
+warning|:|crates/vongola/src/services/docker/mod.rs|:|9|:|9|:|98|:|124|:|unused imports: `ListContainersOptionsBuilder` and `ListServicesOptionsBuilder`|:|[0m[1m[33mwarning[0m[0m[1m: unused imports: `ListContainersOptionsBuilder` and `ListServicesOptionsBuilder`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/docker/mod.rs:9:47[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m9[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    query_parameters::{ListContainersOptions, ListContainersOptionsBuilder, ListServicesOptions, ListServicesOptionsBuilder},[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                                               [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m                       [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m  [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_imports)]` on by default[0m
+
+|:|none
+help|:|crates/vongola/src/services/docker/mod.rs|:|9|:|9|:|45|:|75|:|remove the unused imports|:|none|:|
+help|:|crates/vongola/src/services/docker/mod.rs|:|9|:|9|:|96|:|124|:|remove the unused imports|:|none|:|
+warning|:|crates/vongola/src/services/letsencrypt/http01.rs|:|27|:|27|:|1|:|30|:|empty line after doc comment|:|[0m[1m[33mwarning[0m[0m[1m: empty line after doc comment[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/letsencrypt/http01.rs:25:1[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m25[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m/[0m[0m [0m[0m/// API[0m
+[0m[1m[38;5;12m26[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|_^[0m
+[0m[1m[38;5;12m27[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0mpub struct LetsencryptService {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m[1m[38;5;12m-----------------------------[0m[0m [0m[0m[1m[38;5;12mthe comment documents this struct[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#empty_line_after_doc_comments[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(clippy::empty_line_after_doc_comments)]` on by default[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: [0m[0mif the empty line is unintentional, remove it[0m
+
+|:|none
+warning|:|crates/vongola/src/services/letsencrypt/http01.rs|:|25|:|26|:|1|:|1|:|empty line after doc comment|:|[0m[1m[33mwarning[0m[0m[1m: empty line after doc comment[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/letsencrypt/http01.rs:25:1[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m25[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m/[0m[0m [0m[0m/// API[0m
+[0m[1m[38;5;12m26[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|_^[0m
+[0m[1m[38;5;12m27[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0mpub struct LetsencryptService {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m[1m[38;5;12m-----------------------------[0m[0m [0m[0m[1m[38;5;12mthe comment documents this struct[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#empty_line_after_doc_comments[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(clippy::empty_line_after_doc_comments)]` on by default[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: [0m[0mif the empty line is unintentional, remove it[0m
+
+|:|none
+help|:|crates/vongola/src/services/letsencrypt/http01.rs|:|25|:|26|:|8|:|1|:|if the empty line is unintentional, remove it|:|none|:|
+warning|:|crates/vongola/src/stores/routes.rs|:|89|:|89|:|1|:|10|:|empty line after outer attribute|:|[0m[1m[33mwarning[0m[0m[1m: empty line after outer attribute[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/stores/routes.rs:87:1[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m87[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m/[0m[0m [0m[0m#[cfg(test)][0m
+[0m[1m[38;5;12m88[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|_^[0m
+[0m[1m[38;5;12m89[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0mmod tests {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m[1m[38;5;12m---------[0m[0m [0m[0m[1m[38;5;12mthe attribute applies to this module[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#empty_line_after_outer_attr[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: [0m[0mif the empty line is unintentional, remove it[0m
+
+|:|none
+warning|:|crates/vongola/src/stores/routes.rs|:|87|:|88|:|1|:|1|:|empty line after outer attribute|:|[0m[1m[33mwarning[0m[0m[1m: empty line after outer attribute[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/stores/routes.rs:87:1[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m87[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m/[0m[0m [0m[0m#[cfg(test)][0m
+[0m[1m[38;5;12m88[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|_^[0m
+[0m[1m[38;5;12m89[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0mmod tests {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m[1m[38;5;12m---------[0m[0m [0m[0m[1m[38;5;12mthe attribute applies to this module[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#empty_line_after_outer_attr[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: [0m[0mif the empty line is unintentional, remove it[0m
+
+|:|none
+help|:|crates/vongola/src/stores/routes.rs|:|87|:|88|:|13|:|1|:|if the empty line is unintentional, remove it|:|none|:|
+error|:|crates/vongola/src/cache/disk/handlers.rs|:|155|:|155|:|1|:|15|:|method `finish` has an incompatible type for trait|:|[0m[1m[38;5;9merror[E0053][0m[0m[1m: method `finish` has an incompatible type for trait[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/cache/disk/handlers.rs:155:1[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m155[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m#[async_trait][0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected `pingora_cache::storage::MissFinishType`, found `usize`[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: expected signature `fn(std::boxed::Box<_>) -> std::pin::Pin<std::boxed::Box<[0m[0m[1m[35m(dyn std::future::Future<Output = std::result::Result<pingora_cache::storage::MissFinishType, std::boxed::Box<pingora::Error>>> + std::marker::Send + 'async_trait)[0m[0m>>`[0m
+[0m               found signature `fn(std::boxed::Box<_>) -> std::pin::Pin<std::boxed::Box<[0m[0m[1m[35m(dyn std::future::Future<Output = std::result::Result<usize, std::boxed::Box<pingora::Error>>> + std::marker::Send + 'async_trait)[0m[0m>>`[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: this error originates in the attribute macro `async_trait` (in Nightly builds, run with -Z macro-backtrace for more info)[0m
+[0m[1m[38;5;14mhelp[0m[0m: change the output type to match the trait[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m155[0m[0m [0m[0m[38;5;9m- #[async_trait][0m
+[0m[1m[38;5;12m155[0m[0m [0m[0m[38;5;10m+ std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = std::result::Result<pingora_cache::storage::MissFinishType, std::boxed::Box<pingora::Error>>> + std::marker::Send + 'async_trait)>>[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+
+|:|none
+help|:|crates/vongola/src/cache/disk/handlers.rs|:|155|:|155|:|1|:|15|:|change the output type to match the trait|:|none|:|none
+error|:|crates/vongola/src/cache/disk/handlers.rs|:|155|:|155|:|1|:|15|:|method `finish` has an incompatible type for trait|:|[0m[1m[38;5;9merror[E0053][0m[0m[1m: method `finish` has an incompatible type for trait[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/cache/disk/handlers.rs:155:1[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m155[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m#[async_trait][0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected `pingora_cache::storage::MissFinishType`, found `usize`[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: expected signature `fn(std::boxed::Box<_>) -> std::pin::Pin<std::boxed::Box<[0m[0m[1m[35m(dyn std::future::Future<Output = std::result::Result<pingora_cache::storage::MissFinishType, std::boxed::Box<pingora::Error>>> + std::marker::Send + 'async_trait)[0m[0m>>`[0m
+[0m               found signature `fn(std::boxed::Box<_>) -> std::pin::Pin<std::boxed::Box<[0m[0m[1m[35m(dyn std::future::Future<Output = std::result::Result<usize, std::boxed::Box<pingora::Error>>> + std::marker::Send + 'async_trait)[0m[0m>>`[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: this error originates in the attribute macro `async_trait` (in Nightly builds, run with -Z macro-backtrace for more info)[0m
+[0m[1m[38;5;14mhelp[0m[0m: change the output type to match the trait[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m155[0m[0m [0m[0m[38;5;9m- #[async_trait][0m
+[0m[1m[38;5;12m155[0m[0m [0m[0m[38;5;10m+ std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = std::result::Result<pingora_cache::storage::MissFinishType, std::boxed::Box<pingora::Error>>> + std::marker::Send + 'async_trait)>>[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+
+|:|none
+help|:|crates/vongola/src/cache/disk/handlers.rs|:|155|:|155|:|1|:|15|:|change the output type to match the trait|:|none|:|none
+error|:|crates/vongola/src/proxy_server/https_proxy.rs|:|284|:|284|:|6|:|6|:|method `upstream_response_filter` has an incompatible type for trait|:|[0m[1m[38;5;9merror[E0053][0m[0m[1m: method `upstream_response_filter` has an incompatible type for trait[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/proxy_server/https_proxy.rs:284:6[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m284[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    ) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m      [0m[0m[1m[38;5;9m^[0m[0m [0m[0m[1m[38;5;9mexpected `Result<(), Box<Error>>`, found `()`[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: expected signature `fn(&proxy_server::https_proxy::Router, &mut pingora::proxy::Session, &mut pingora::http::ResponseHeader, &mut proxy_server::https_proxy::RouterContext) -> [0m[0m[1m[35mstd::result::Result<(), std::boxed::Box<pingora::Error>>[0m[0m`[0m
+[0m               found signature `fn(&proxy_server::https_proxy::Router, &mut pingora::proxy::Session, &mut pingora::http::ResponseHeader, &mut proxy_server::https_proxy::RouterContext) -> [0m[0m[1m[35m()[0m[0m`[0m
+[0m[1m[38;5;14mhelp[0m[0m: change the output type to match the trait[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m284[0m[0m [0m[0m[1m[38;5;12m| [0m[0m    )[0m[0m[38;5;10m -> std::result::Result<(), std::boxed::Box<pingora::Error>>[0m[0m {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[38;5;10m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[0m
+
+|:|none
+help|:|crates/vongola/src/proxy_server/https_proxy.rs|:|284|:|284|:|6|:|6|:|change the output type to match the trait|:|none|:| -> std::result::Result<(), std::boxed::Box<pingora::Error>>
+error|:|crates/vongola/src/proxy_server/https_proxy.rs|:|395|:|398|:|9|:|28|:|method `cache_hit_filter` has 4 parameters but the declaration in trait `pingora::proxy::ProxyHttp::cache_hit_filter` has 5|:|[0m[1m[38;5;9merror[E0050][0m[0m[1m: method `cache_hit_filter` has 4 parameters but the declaration in trait `pingora::proxy::ProxyHttp::cache_hit_filter` has 5[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/proxy_server/https_proxy.rs:395:9[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m395[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m/[0m[0m [0m[0m        &self,[0m
+[0m[1m[38;5;12m396[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|[0m[0m [0m[0m        _session: &Session,[0m
+[0m[1m[38;5;12m397[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|[0m[0m [0m[0m        meta: &CacheMeta,[0m
+[0m[1m[38;5;12m398[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|[0m[0m [0m[0m        ctx: &mut Self::CTX,[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|___________________________^[0m[0m [0m[0m[1m[38;5;9mexpected 5 parameters, found 4[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `cache_hit_filter` from trait: `[0m[0m[1m[35mfn(&'life0 Self, &'life1 pingora::proxy::Session, &'life2 pingora_cache::CacheMeta, bool, &'life3 mut <Self as pingora::proxy::ProxyHttp>::CTX) -> std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = std::result::Result<std::option::Option<pingora_cache::ForcedInvalidationKind>, std::boxed::Box<pingora::Error>>> + std::marker::Send + 'async_trait)>>[0m[0m`[0m
+
+|:|none
+error|:|crates/vongola/src/proxy_server/https_proxy.rs|:|284|:|284|:|6|:|6|:|method `upstream_response_filter` has an incompatible type for trait|:|[0m[1m[38;5;9merror[E0053][0m[0m[1m: method `upstream_response_filter` has an incompatible type for trait[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/proxy_server/https_proxy.rs:284:6[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m284[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    ) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m      [0m[0m[1m[38;5;9m^[0m[0m [0m[0m[1m[38;5;9mexpected `Result<(), Box<Error>>`, found `()`[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: expected signature `fn(&proxy_server::https_proxy::Router, &mut pingora::proxy::Session, &mut pingora::http::ResponseHeader, &mut proxy_server::https_proxy::RouterContext) -> [0m[0m[1m[35mstd::result::Result<(), std::boxed::Box<pingora::Error>>[0m[0m`[0m
+[0m               found signature `fn(&proxy_server::https_proxy::Router, &mut pingora::proxy::Session, &mut pingora::http::ResponseHeader, &mut proxy_server::https_proxy::RouterContext) -> [0m[0m[1m[35m()[0m[0m`[0m
+[0m[1m[38;5;14mhelp[0m[0m: change the output type to match the trait[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m284[0m[0m [0m[0m[1m[38;5;12m| [0m[0m    )[0m[0m[38;5;10m -> std::result::Result<(), std::boxed::Box<pingora::Error>>[0m[0m {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[38;5;10m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[0m
+
+|:|none
+help|:|crates/vongola/src/proxy_server/https_proxy.rs|:|284|:|284|:|6|:|6|:|change the output type to match the trait|:|none|:| -> std::result::Result<(), std::boxed::Box<pingora::Error>>
+error|:|crates/vongola/src/proxy_server/https_proxy.rs|:|395|:|398|:|9|:|28|:|method `cache_hit_filter` has 4 parameters but the declaration in trait `pingora::proxy::ProxyHttp::cache_hit_filter` has 5|:|[0m[1m[38;5;9merror[E0050][0m[0m[1m: method `cache_hit_filter` has 4 parameters but the declaration in trait `pingora::proxy::ProxyHttp::cache_hit_filter` has 5[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/proxy_server/https_proxy.rs:395:9[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m395[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m/[0m[0m [0m[0m        &self,[0m
+[0m[1m[38;5;12m396[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|[0m[0m [0m[0m        _session: &Session,[0m
+[0m[1m[38;5;12m397[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|[0m[0m [0m[0m        meta: &CacheMeta,[0m
+[0m[1m[38;5;12m398[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|[0m[0m [0m[0m        ctx: &mut Self::CTX,[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|___________________________^[0m[0m [0m[0m[1m[38;5;9mexpected 5 parameters, found 4[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `cache_hit_filter` from trait: `[0m[0m[1m[35mfn(&'life0 Self, &'life1 pingora::proxy::Session, &'life2 pingora_cache::CacheMeta, bool, &'life3 mut <Self as pingora::proxy::ProxyHttp>::CTX) -> std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = std::result::Result<std::option::Option<pingora_cache::ForcedInvalidationKind>, std::boxed::Box<pingora::Error>>> + std::marker::Send + 'async_trait)>>[0m[0m`[0m
+
+|:|none
+error|:|crates/vongola/src/services/config/mod.rs|:|88|:|88|:|28|:|88|:|method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4|:|[0m[1m[38;5;9merror[E0050][0m[0m[1m: method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/config/mod.rs:88:28[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m88[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service(&mut self, _fds: Option<ListenFds>, _shutdown: ShutdownWatch) {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected 4 parameters, found 3[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `start_service` from trait: `[0m[0m[1m[35mfn(&'life0 mut Self, std::option::Option<std::sync::Arc<tokio::sync::Mutex<pingora::server::Fds>>>, tokio::sync::watch::Receiver<bool>, usize) -> std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = ()> + std::marker::Send + 'async_trait)>>[0m[0m`[0m
+
+|:|none
+error|:|crates/vongola/src/services/discovery/mod.rs|:|125|:|125|:|28|:|88|:|method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4|:|[0m[1m[38;5;9merror[E0050][0m[0m[1m: method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/discovery/mod.rs:125:28[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m125[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service(&mut self, _fds: Option<ListenFds>, _shutdown: ShutdownWatch) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected 4 parameters, found 3[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `start_service` from trait: `[0m[0m[1m[35mfn(&'life0 mut Self, std::option::Option<std::sync::Arc<tokio::sync::Mutex<pingora::server::Fds>>>, tokio::sync::watch::Receiver<bool>, usize) -> std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = ()> + std::marker::Send + 'async_trait)>>[0m[0m`[0m
+
+|:|none
+error|:|crates/vongola/src/services/docker/mod.rs|:|434|:|434|:|28|:|92|:|method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4|:|[0m[1m[38;5;9merror[E0050][0m[0m[1m: method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/docker/mod.rs:434:28[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m434[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service(&mut self, _fds: Option<ListenFds>, mut _shutdown: ShutdownWatch) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected 4 parameters, found 3[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `start_service` from trait: `[0m[0m[1m[35mfn(&'life0 mut Self, std::option::Option<std::sync::Arc<tokio::sync::Mutex<pingora::server::Fds>>>, tokio::sync::watch::Receiver<bool>, usize) -> std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = ()> + std::marker::Send + 'async_trait)>>[0m[0m`[0m
+
+|:|none
+error|:|crates/vongola/src/services/health_check/mod.rs|:|49|:|49|:|28|:|88|:|method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4|:|[0m[1m[38;5;9merror[E0050][0m[0m[1m: method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/health_check/mod.rs:49:28[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m49[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service(&mut self, _fds: Option<ListenFds>, _shutdown: ShutdownWatch) {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected 4 parameters, found 3[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `start_service` from trait: `[0m[0m[1m[35mfn(&'life0 mut Self, std::option::Option<std::sync::Arc<tokio::sync::Mutex<pingora::server::Fds>>>, tokio::sync::watch::Receiver<bool>, usize) -> std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = ()> + std::marker::Send + 'async_trait)>>[0m[0m`[0m
+
+|:|none
+error|:|crates/vongola/src/services/letsencrypt/http01.rs|:|290|:|290|:|28|:|92|:|method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4|:|[0m[1m[38;5;9merror[E0050][0m[0m[1m: method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/letsencrypt/http01.rs:290:28[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m290[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service(&mut self, _fds: Option<ListenFds>, mut _shutdown: ShutdownWatch) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected 4 parameters, found 3[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `start_service` from trait: `[0m[0m[1m[35mfn(&'life0 mut Self, std::option::Option<std::sync::Arc<tokio::sync::Mutex<pingora::server::Fds>>>, tokio::sync::watch::Receiver<bool>, usize) -> std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = ()> + std::marker::Send + 'async_trait)>>[0m[0m`[0m
+
+|:|none
+error|:|crates/vongola/src/services/logger/mod.rs|:|265|:|265|:|28|:|88|:|method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4|:|[0m[1m[38;5;9merror[E0050][0m[0m[1m: method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/logger/mod.rs:265:28[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m265[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service(&mut self, _fds: Option<ListenFds>, _shutdown: ShutdownWatch) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected 4 parameters, found 3[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `start_service` from trait: `[0m[0m[1m[35mfn(&'life0 mut Self, std::option::Option<std::sync::Arc<tokio::sync::Mutex<pingora::server::Fds>>>, tokio::sync::watch::Receiver<bool>, usize) -> std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = ()> + std::marker::Send + 'async_trait)>>[0m[0m`[0m
+
+|:|none
+error|:|crates/vongola/src/services/mod.rs|:|34|:|34|:|28|:|87|:|method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4|:|[0m[1m[38;5;9merror[E0050][0m[0m[1m: method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:34:28[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m34[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service(&mut self, _fds: Option<ListenFds>, shutdown: ShutdownWatch) {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected 4 parameters, found 3[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `start_service` from trait: `[0m[0m[1m[35mfn(&'life0 mut Self, std::option::Option<std::sync::Arc<tokio::sync::Mutex<pingora::server::Fds>>>, tokio::sync::watch::Receiver<bool>, usize) -> std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = ()> + std::marker::Send + 'async_trait)>>[0m[0m`[0m
+
+|:|none
+error|:|crates/vongola/src/services/config/mod.rs|:|88|:|88|:|28|:|88|:|method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4|:|[0m[1m[38;5;9merror[E0050][0m[0m[1m: method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/config/mod.rs:88:28[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m88[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service(&mut self, _fds: Option<ListenFds>, _shutdown: ShutdownWatch) {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected 4 parameters, found 3[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `start_service` from trait: `[0m[0m[1m[35mfn(&'life0 mut Self, std::option::Option<std::sync::Arc<tokio::sync::Mutex<pingora::server::Fds>>>, tokio::sync::watch::Receiver<bool>, usize) -> std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = ()> + std::marker::Send + 'async_trait)>>[0m[0m`[0m
+
+|:|none
+error|:|crates/vongola/src/services/discovery/mod.rs|:|125|:|125|:|28|:|88|:|method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4|:|[0m[1m[38;5;9merror[E0050][0m[0m[1m: method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/discovery/mod.rs:125:28[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m125[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service(&mut self, _fds: Option<ListenFds>, _shutdown: ShutdownWatch) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected 4 parameters, found 3[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `start_service` from trait: `[0m[0m[1m[35mfn(&'life0 mut Self, std::option::Option<std::sync::Arc<tokio::sync::Mutex<pingora::server::Fds>>>, tokio::sync::watch::Receiver<bool>, usize) -> std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = ()> + std::marker::Send + 'async_trait)>>[0m[0m`[0m
+
+|:|none
+error|:|crates/vongola/src/services/docker/mod.rs|:|434|:|434|:|28|:|92|:|method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4|:|[0m[1m[38;5;9merror[E0050][0m[0m[1m: method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/docker/mod.rs:434:28[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m434[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service(&mut self, _fds: Option<ListenFds>, mut _shutdown: ShutdownWatch) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected 4 parameters, found 3[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `start_service` from trait: `[0m[0m[1m[35mfn(&'life0 mut Self, std::option::Option<std::sync::Arc<tokio::sync::Mutex<pingora::server::Fds>>>, tokio::sync::watch::Receiver<bool>, usize) -> std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = ()> + std::marker::Send + 'async_trait)>>[0m[0m`[0m
+
+|:|none
+error|:|crates/vongola/src/services/health_check/mod.rs|:|49|:|49|:|28|:|88|:|method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4|:|[0m[1m[38;5;9merror[E0050][0m[0m[1m: method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/health_check/mod.rs:49:28[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m49[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service(&mut self, _fds: Option<ListenFds>, _shutdown: ShutdownWatch) {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected 4 parameters, found 3[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `start_service` from trait: `[0m[0m[1m[35mfn(&'life0 mut Self, std::option::Option<std::sync::Arc<tokio::sync::Mutex<pingora::server::Fds>>>, tokio::sync::watch::Receiver<bool>, usize) -> std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = ()> + std::marker::Send + 'async_trait)>>[0m[0m`[0m
+
+|:|none
+error|:|crates/vongola/src/services/letsencrypt/http01.rs|:|290|:|290|:|28|:|92|:|method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4|:|[0m[1m[38;5;9merror[E0050][0m[0m[1m: method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/letsencrypt/http01.rs:290:28[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m290[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service(&mut self, _fds: Option<ListenFds>, mut _shutdown: ShutdownWatch) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected 4 parameters, found 3[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `start_service` from trait: `[0m[0m[1m[35mfn(&'life0 mut Self, std::option::Option<std::sync::Arc<tokio::sync::Mutex<pingora::server::Fds>>>, tokio::sync::watch::Receiver<bool>, usize) -> std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = ()> + std::marker::Send + 'async_trait)>>[0m[0m`[0m
+
+|:|none
+error|:|crates/vongola/src/services/logger/mod.rs|:|265|:|265|:|28|:|88|:|method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4|:|[0m[1m[38;5;9merror[E0050][0m[0m[1m: method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/logger/mod.rs:265:28[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m265[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service(&mut self, _fds: Option<ListenFds>, _shutdown: ShutdownWatch) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected 4 parameters, found 3[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `start_service` from trait: `[0m[0m[1m[35mfn(&'life0 mut Self, std::option::Option<std::sync::Arc<tokio::sync::Mutex<pingora::server::Fds>>>, tokio::sync::watch::Receiver<bool>, usize) -> std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = ()> + std::marker::Send + 'async_trait)>>[0m[0m`[0m
+
+|:|none
+error|:|crates/vongola/src/services/mod.rs|:|34|:|34|:|28|:|87|:|method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4|:|[0m[1m[38;5;9merror[E0050][0m[0m[1m: method `start_service` has 3 parameters but the declaration in trait `pingora::services::Service::start_service` has 4[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:34:28[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m34[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service(&mut self, _fds: Option<ListenFds>, shutdown: ShutdownWatch) {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected 4 parameters, found 3[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `start_service` from trait: `[0m[0m[1m[35mfn(&'life0 mut Self, std::option::Option<std::sync::Arc<tokio::sync::Mutex<pingora::server::Fds>>>, tokio::sync::watch::Receiver<bool>, usize) -> std::pin::Pin<std::boxed::Box<(dyn std::future::Future<Output = ()> + std::marker::Send + 'async_trait)>>[0m[0m`[0m
+
+|:|none
+error|:|crates/vongola/src/services/docker/mod.rs|:|89|:|89|:|17|:|24|:|mismatched types|:|[0m[1m[38;5;9merror[E0308][0m[0m[1m: mismatched types[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/docker/mod.rs:89:17[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m89[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                filters,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                 [0m[0m[1m[38;5;9m^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected `Option<HashMap<String, Vec<String>>>`, found `HashMap<T, Vec<T>>`[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: expected enum `[0m[0m[1m[35mstd::option::Option<[0m[0mstd::collections::HashMap<[0m[0m[1m[35mstd::string::String[0m[0m, std::vec::Vec<[0m[0m[1m[35mstd::string::String[0m[0m>>[0m[0m[1m[35m>[0m[0m`[0m
+[0m            found struct `std::collections::HashMap<[0m[0m[1m[35mT[0m[0m, std::vec::Vec<[0m[0m[1m[35mT[0m[0m>>`[0m
+
+|:|none
+error|:|crates/vongola/src/services/docker/mod.rs|:|90|:|90|:|25|:|29|:|mismatched types|:|[0m[1m[38;5;9merror[E0308][0m[0m[1m: mismatched types[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/docker/mod.rs:90:25[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m90[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                status: true,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                         [0m[0m[1m[38;5;9m^^^^[0m[0m [0m[0m[1m[38;5;9mexpected `Option<bool>`, found `bool`[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: expected enum `[0m[0m[1m[35mstd::option::Option<bool>[0m[0m`[0m
+[0m              found type `[0m[0m[1m[35mbool[0m[0m`[0m
+[0m[1m[38;5;14mhelp[0m[0m: try wrapping the expression in `Some`[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m90[0m[0m [0m[0m[1m[38;5;12m| [0m[0m                status: [0m[0m[38;5;10mSome([0m[0mtrue[0m[0m[38;5;10m)[0m[0m,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                         [0m[0m[38;5;10m+++++[0m[0m    [0m[0m[38;5;10m+[0m
+
+|:|none
+help|:|crates/vongola/src/services/docker/mod.rs|:|90|:|90|:|25|:|25|:|try wrapping the expression in `Some`|:|none|:|Some(
+help|:|crates/vongola/src/services/docker/mod.rs|:|90|:|90|:|29|:|29|:|try wrapping the expression in `Some`|:|none|:|)
+error|:|crates/vongola/src/services/docker/mod.rs|:|255|:|255|:|17|:|24|:|mismatched types|:|[0m[1m[38;5;9merror[E0308][0m[0m[1m: mismatched types[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/docker/mod.rs:255:17[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m255[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                filters,[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                 [0m[0m[1m[38;5;9m^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected `Option<HashMap<String, Vec<String>>>`, found `HashMap<T, Vec<T>>`[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: expected enum `[0m[0m[1m[35mstd::option::Option<[0m[0mstd::collections::HashMap<[0m[0m[1m[35mstd::string::String[0m[0m, std::vec::Vec<[0m[0m[1m[35mstd::string::String[0m[0m>>[0m[0m[1m[35m>[0m[0m`[0m
+[0m             found struct `std::collections::HashMap<[0m[0m[1m[35mT[0m[0m, std::vec::Vec<[0m[0m[1m[35mT[0m[0m>>`[0m
+
+|:|none
+error|:|crates/vongola/src/services/docker/mod.rs|:|89|:|89|:|17|:|24|:|mismatched types|:|[0m[1m[38;5;9merror[E0308][0m[0m[1m: mismatched types[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/docker/mod.rs:89:17[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m89[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                filters,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                 [0m[0m[1m[38;5;9m^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected `Option<HashMap<String, Vec<String>>>`, found `HashMap<T, Vec<T>>`[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: expected enum `[0m[0m[1m[35mstd::option::Option<[0m[0mstd::collections::HashMap<[0m[0m[1m[35mstd::string::String[0m[0m, std::vec::Vec<[0m[0m[1m[35mstd::string::String[0m[0m>>[0m[0m[1m[35m>[0m[0m`[0m
+[0m            found struct `std::collections::HashMap<[0m[0m[1m[35mT[0m[0m, std::vec::Vec<[0m[0m[1m[35mT[0m[0m>>`[0m
+
+|:|none
+error|:|crates/vongola/src/services/docker/mod.rs|:|90|:|90|:|25|:|29|:|mismatched types|:|[0m[1m[38;5;9merror[E0308][0m[0m[1m: mismatched types[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/docker/mod.rs:90:25[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m90[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                status: true,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                         [0m[0m[1m[38;5;9m^^^^[0m[0m [0m[0m[1m[38;5;9mexpected `Option<bool>`, found `bool`[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: expected enum `[0m[0m[1m[35mstd::option::Option<bool>[0m[0m`[0m
+[0m              found type `[0m[0m[1m[35mbool[0m[0m`[0m
+[0m[1m[38;5;14mhelp[0m[0m: try wrapping the expression in `Some`[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m90[0m[0m [0m[0m[1m[38;5;12m| [0m[0m                status: [0m[0m[38;5;10mSome([0m[0mtrue[0m[0m[38;5;10m)[0m[0m,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                         [0m[0m[38;5;10m+++++[0m[0m    [0m[0m[38;5;10m+[0m
+
+|:|none
+help|:|crates/vongola/src/services/docker/mod.rs|:|90|:|90|:|25|:|25|:|try wrapping the expression in `Some`|:|none|:|Some(
+help|:|crates/vongola/src/services/docker/mod.rs|:|90|:|90|:|29|:|29|:|try wrapping the expression in `Some`|:|none|:|)
+error|:|crates/vongola/src/services/docker/mod.rs|:|255|:|255|:|17|:|24|:|mismatched types|:|[0m[1m[38;5;9merror[E0308][0m[0m[1m: mismatched types[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/docker/mod.rs:255:17[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m255[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                filters,[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                 [0m[0m[1m[38;5;9m^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected `Option<HashMap<String, Vec<String>>>`, found `HashMap<T, Vec<T>>`[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: expected enum `[0m[0m[1m[35mstd::option::Option<[0m[0mstd::collections::HashMap<[0m[0m[1m[35mstd::string::String[0m[0m, std::vec::Vec<[0m[0m[1m[35mstd::string::String[0m[0m>>[0m[0m[1m[35m>[0m[0m`[0m
+[0m             found struct `std::collections::HashMap<[0m[0m[1m[35mT[0m[0m, std::vec::Vec<[0m[0m[1m[35mT[0m[0m>>`[0m
+
+|:|none
+error|:|crates/vongola/src/proxy_server/mod.rs|:|14|:|41|:|43|:|2|:|cannot create non-exhaustive struct using struct expression|:|[0m[1m[38;5;9merror[E0639][0m[0m[1m: cannot create non-exhaustive struct using struct expression[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/proxy_server/mod.rs:14:43[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m14[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0mconst DEFAULT_PEER_OPTIONS: PeerOptions = PeerOptions {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m ___________________________________________^[0m
+[0m[1m[38;5;12m15[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|[0m[0m [0m[0m    dscp: None,[0m
+[0m[1m[38;5;12m16[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|[0m[0m [0m[0m    tcp_fast_open: true,[0m
+[0m[1m[38;5;12m17[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|[0m[0m [0m[0m    verify_hostname: true,[0m
+[0m[1m[38;5;12m...[0m[0m  [0m[0m[1m[38;5;9m|[0m
+[0m[1m[38;5;12m40[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|[0m[0m [0m[0m    custom_l4: None,[0m
+[0m[1m[38;5;12m41[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|[0m[0m [0m[0m};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|_^[0m
+
+|:|none
+error|:|crates/vongola/src/proxy_server/mod.rs|:|21|:|21|:|25|:|37|:|missing field `user_timeout` in initializer of `pingora::protocols::TcpKeepalive`|:|[0m[1m[38;5;9merror[E0063][0m[0m[1m: missing field `user_timeout` in initializer of `pingora::protocols::TcpKeepalive`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/proxy_server/mod.rs:21:25[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m21[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    tcp_keepalive: Some(TcpKeepalive {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                         [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmissing `user_timeout`[0m
+
+|:|none
+error|:|crates/vongola/src/proxy_server/mod.rs|:|14|:|14|:|43|:|54|:|missing field `upstream_tcp_sock_tweak_hook` in initializer of `pingora::upstreams::peer::PeerOptions`|:|[0m[1m[38;5;9merror[E0063][0m[0m[1m: missing field `upstream_tcp_sock_tweak_hook` in initializer of `pingora::upstreams::peer::PeerOptions`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/proxy_server/mod.rs:14:43[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m14[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mconst DEFAULT_PEER_OPTIONS: PeerOptions = PeerOptions {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                           [0m[0m[1m[38;5;9m^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmissing `upstream_tcp_sock_tweak_hook`[0m
+
+|:|none
+error|:|crates/vongola/src/proxy_server/mod.rs|:|14|:|41|:|43|:|2|:|cannot create non-exhaustive struct using struct expression|:|[0m[1m[38;5;9merror[E0639][0m[0m[1m: cannot create non-exhaustive struct using struct expression[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/proxy_server/mod.rs:14:43[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m14[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0mconst DEFAULT_PEER_OPTIONS: PeerOptions = PeerOptions {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m ___________________________________________^[0m
+[0m[1m[38;5;12m15[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|[0m[0m [0m[0m    dscp: None,[0m
+[0m[1m[38;5;12m16[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|[0m[0m [0m[0m    tcp_fast_open: true,[0m
+[0m[1m[38;5;12m17[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|[0m[0m [0m[0m    verify_hostname: true,[0m
+[0m[1m[38;5;12m...[0m[0m  [0m[0m[1m[38;5;9m|[0m
+[0m[1m[38;5;12m40[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|[0m[0m [0m[0m    custom_l4: None,[0m
+[0m[1m[38;5;12m41[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|[0m[0m [0m[0m};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;9m|_^[0m
+
+|:|none
+error|:|crates/vongola/src/proxy_server/mod.rs|:|21|:|21|:|25|:|37|:|missing field `user_timeout` in initializer of `pingora::protocols::TcpKeepalive`|:|[0m[1m[38;5;9merror[E0063][0m[0m[1m: missing field `user_timeout` in initializer of `pingora::protocols::TcpKeepalive`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/proxy_server/mod.rs:21:25[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m21[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    tcp_keepalive: Some(TcpKeepalive {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                         [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmissing `user_timeout`[0m
+
+|:|none
+error|:|crates/vongola/src/proxy_server/mod.rs|:|14|:|14|:|43|:|54|:|missing field `upstream_tcp_sock_tweak_hook` in initializer of `pingora::upstreams::peer::PeerOptions`|:|[0m[1m[38;5;9merror[E0063][0m[0m[1m: missing field `upstream_tcp_sock_tweak_hook` in initializer of `pingora::upstreams::peer::PeerOptions`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/proxy_server/mod.rs:14:43[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m14[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mconst DEFAULT_PEER_OPTIONS: PeerOptions = PeerOptions {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                           [0m[0m[1m[38;5;9m^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmissing `upstream_tcp_sock_tweak_hook`[0m
+
+|:|none
+error|:|crates/vongola/src/services/mod.rs|:|43|:|43|:|42|:|66|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:43:29[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m43[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            routing_service.start_service(None, shutdown.clone()),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                             [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m------------------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m43[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            routing_service.start_service(None, shutdown.clone()[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                 [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+error|:|crates/vongola/src/services/mod.rs|:|43|:|43|:|29|:|42|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:43:29[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m43[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            routing_service.start_service(None, shutdown.clone()),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                             [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m------------------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m43[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            routing_service.start_service(None, shutdown.clone()[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                 [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+note|:|/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs|:|44|:|44|:|14|:|27|:|method defined here|:|none|:|none
+help|:|crates/vongola/src/services/mod.rs|:|43|:|43|:|42|:|66|:|provide the argument|:|none|:|(None, shutdown.clone(), /* usize */)
+error|:|crates/vongola/src/services/mod.rs|:|44|:|44|:|41|:|65|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:44:28[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            health_service.start_service(None, shutdown.clone()),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m------------------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            health_service.start_service(None, shutdown.clone()[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+error|:|crates/vongola/src/services/mod.rs|:|44|:|44|:|28|:|41|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:44:28[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            health_service.start_service(None, shutdown.clone()),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m------------------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            health_service.start_service(None, shutdown.clone()[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+note|:|/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs|:|44|:|44|:|14|:|27|:|method defined here|:|none|:|none
+help|:|crates/vongola/src/services/mod.rs|:|44|:|44|:|41|:|65|:|provide the argument|:|none|:|(None, shutdown.clone(), /* usize */)
+error|:|crates/vongola/src/services/mod.rs|:|43|:|43|:|42|:|66|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:43:29[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m43[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            routing_service.start_service(None, shutdown.clone()),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                             [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m------------------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m43[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            routing_service.start_service(None, shutdown.clone()[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                 [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+error|:|crates/vongola/src/services/mod.rs|:|43|:|43|:|29|:|42|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:43:29[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m43[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            routing_service.start_service(None, shutdown.clone()),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                             [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m------------------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m43[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            routing_service.start_service(None, shutdown.clone()[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                 [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+note|:|/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs|:|44|:|44|:|14|:|27|:|method defined here|:|none|:|none
+help|:|crates/vongola/src/services/mod.rs|:|43|:|43|:|42|:|66|:|provide the argument|:|none|:|(None, shutdown.clone(), /* usize */)
+error|:|crates/vongola/src/services/mod.rs|:|45|:|45|:|40|:|64|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:45:27[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m45[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            config_server.start_service(None, shutdown.clone()),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                           [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m------------------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m45[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            config_server.start_service(None, shutdown.clone()[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                               [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+error|:|crates/vongola/src/services/mod.rs|:|45|:|45|:|27|:|40|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:45:27[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m45[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            config_server.start_service(None, shutdown.clone()),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                           [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m------------------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m45[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            config_server.start_service(None, shutdown.clone()[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                               [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+note|:|/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs|:|44|:|44|:|14|:|27|:|method defined here|:|none|:|none
+help|:|crates/vongola/src/services/mod.rs|:|45|:|45|:|40|:|64|:|provide the argument|:|none|:|(None, shutdown.clone(), /* usize */)
+error|:|crates/vongola/src/services/mod.rs|:|44|:|44|:|41|:|65|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:44:28[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            health_service.start_service(None, shutdown.clone()),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m------------------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            health_service.start_service(None, shutdown.clone()[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+error|:|crates/vongola/src/services/mod.rs|:|44|:|44|:|28|:|41|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:44:28[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            health_service.start_service(None, shutdown.clone()),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m------------------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            health_service.start_service(None, shutdown.clone()[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+note|:|/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs|:|44|:|44|:|14|:|27|:|method defined here|:|none|:|none
+help|:|crates/vongola/src/services/mod.rs|:|44|:|44|:|41|:|65|:|provide the argument|:|none|:|(None, shutdown.clone(), /* usize */)
+error|:|crates/vongola/src/services/mod.rs|:|45|:|45|:|40|:|64|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:45:27[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m45[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            config_server.start_service(None, shutdown.clone()),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                           [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m------------------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m45[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            config_server.start_service(None, shutdown.clone()[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                               [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+error|:|crates/vongola/src/services/mod.rs|:|45|:|45|:|27|:|40|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:45:27[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m45[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            config_server.start_service(None, shutdown.clone()),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                           [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m------------------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m45[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            config_server.start_service(None, shutdown.clone()[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                               [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+note|:|/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs|:|44|:|44|:|14|:|27|:|method defined here|:|none|:|none
+help|:|crates/vongola/src/services/mod.rs|:|45|:|45|:|40|:|64|:|provide the argument|:|none|:|(None, shutdown.clone(), /* usize */)
+error|:|crates/vongola/src/services/mod.rs|:|46|:|46|:|41|:|65|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:46:28[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m46[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            docker_service.start_service(None, shutdown.clone()),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m------------------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m46[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            docker_service.start_service(None, shutdown.clone()[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+error|:|crates/vongola/src/services/mod.rs|:|46|:|46|:|28|:|41|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:46:28[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m46[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            docker_service.start_service(None, shutdown.clone()),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m------------------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m46[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            docker_service.start_service(None, shutdown.clone()[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+note|:|/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs|:|44|:|44|:|14|:|27|:|method defined here|:|none|:|none
+help|:|crates/vongola/src/services/mod.rs|:|46|:|46|:|41|:|65|:|provide the argument|:|none|:|(None, shutdown.clone(), /* usize */)
+error|:|crates/vongola/src/services/mod.rs|:|47|:|47|:|46|:|62|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:47:33[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m47[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            letsencrypt_service.start_service(None, shutdown),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                 [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m----------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m47[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            letsencrypt_service.start_service(None, shutdown[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                             [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+error|:|crates/vongola/src/services/mod.rs|:|47|:|47|:|33|:|46|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:47:33[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m47[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            letsencrypt_service.start_service(None, shutdown),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                 [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m----------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m47[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            letsencrypt_service.start_service(None, shutdown[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                             [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+note|:|/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs|:|44|:|44|:|14|:|27|:|method defined here|:|none|:|none
+help|:|crates/vongola/src/services/mod.rs|:|47|:|47|:|46|:|62|:|provide the argument|:|none|:|(None, shutdown, /* usize */)
+error|:|crates/vongola/src/services/mod.rs|:|46|:|46|:|41|:|65|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:46:28[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m46[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            docker_service.start_service(None, shutdown.clone()),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m------------------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m46[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            docker_service.start_service(None, shutdown.clone()[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+error|:|crates/vongola/src/services/mod.rs|:|46|:|46|:|28|:|41|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:46:28[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m46[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            docker_service.start_service(None, shutdown.clone()),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m------------------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m46[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            docker_service.start_service(None, shutdown.clone()[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+note|:|/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs|:|44|:|44|:|14|:|27|:|method defined here|:|none|:|none
+help|:|crates/vongola/src/services/mod.rs|:|46|:|46|:|41|:|65|:|provide the argument|:|none|:|(None, shutdown.clone(), /* usize */)
+error|:|crates/vongola/src/services/mod.rs|:|47|:|47|:|46|:|62|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:47:33[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m47[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            letsencrypt_service.start_service(None, shutdown),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                 [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m----------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m47[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            letsencrypt_service.start_service(None, shutdown[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                             [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+error|:|crates/vongola/src/services/mod.rs|:|47|:|47|:|33|:|46|:|this method takes 3 arguments but 2 arguments were supplied|:|[0m[1m[38;5;9merror[E0061][0m[0m[1m: this method takes 3 arguments but 2 arguments were supplied[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mcrates/vongola/src/services/mod.rs:47:33[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m47[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            letsencrypt_service.start_service(None, shutdown),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                 [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m[1m[38;5;12m----------------[0m[0m [0m[0m[1m[38;5;12margument #3 of type `usize` is missing[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;10mnote[0m[0m: method defined here[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0m/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs:44:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async fn start_service([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;10m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;14mhelp[0m[0m: provide the argument[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m47[0m[0m [0m[0m[1m[38;5;12m| [0m[0m            letsencrypt_service.start_service(None, shutdown[0m[0m[38;5;10m, /* usize */[0m[0m),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                             [0m[0m[38;5;10m+++++++++++++[0m
+
+|:|none
+note|:|/home/phaedrus/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pingora-core-0.5.0/src/services/mod.rs|:|44|:|44|:|14|:|27|:|method defined here|:|none|:|none
+help|:|crates/vongola/src/services/mod.rs|:|47|:|47|:|46|:|62|:|provide the argument|:|none|:|(None, shutdown, /* usize */)

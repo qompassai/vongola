@@ -1,4 +1,4 @@
-# /qompassai
+# /qompassai/rust/clippy.toml
 disallowed-methods = [
   { path = "std::path::Path::display", reason = "incorrect handling of non-Unicode paths, use path.to_utf8() or debug (`{path:?}`) instead" },
 ]
@@ -6,4 +6,4 @@ allow-unwrap-in-tests = true
 cognitive-complexity-threshold = 15
 excessive-nesting-threshold = 8
 max-fn-params-bools = 2
-msrv = "1.82.0"
+msrv = "1.88.0"

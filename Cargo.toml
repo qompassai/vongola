@@ -1,13 +1,19 @@
 [workspace]
-package = { rust-version = "1.82.0" }
+package = { rust-version = "1.88.0" }
 members = ["crates/plugin_request_id", "crates/plugins_api", "crates/vongola"]
 resolver = "2"
 
+[workspace.dependencies]
+oqs = { version = "0.10.1", default-features = false, features = ["vendored", "kems", "sigs"] }
+oqs-sys = { version = "0.10.1", default-features = false, features = ["vendored", "kems", "sigs"] }
+
 [profile.dev]
 opt-level = 0
+debug = true
 incremental = true
 
 [profile.release]
+opt-level = 3
 strip = true
 lto = true
 debug = false

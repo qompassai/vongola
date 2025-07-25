@@ -1,11 +1,10 @@
+// /qompassai/vongola/crates/vongola/src/cache/disk/handlers.rs
 use std::{
     any::Any,
     io::Read,
     path::{Path, PathBuf},
 };
-
 use async_trait::async_trait;
-
 // use bytes::BufMut;
 use pingora_cache::{
     key::CacheHashKey,
@@ -13,29 +12,21 @@ use pingora_cache::{
     trace::SpanHandle,
     CacheKey, Storage,
 };
-
 use pingora::Result;
-
 use tokio::{fs::OpenOptions, io::AsyncWriteExt};
-
 use crate::cache::disk::storage::DISK_MEMORY_CACHE;
-
 use super::meta::DiskCacheItemMetadata;
-
 pub struct DiskCacheHitHandler {
     target: std::io::BufReader<std::fs::File>,
     path: PathBuf,
-
     meta: DiskCacheItemMetadata,
     finished_buffer: bytes::BytesMut,
 }
-
 /// HIT handler for the cache
 impl DiskCacheHitHandler {
     pub fn new(
         target: std::io::BufReader<std::fs::File>,
         path: PathBuf,
-
         meta: DiskCacheItemMetadata,
     ) -> Self {
         DiskCacheHitHandler {
@@ -46,7 +37,6 @@ impl DiskCacheHitHandler {
         }
     }
 }
-
 #[async_trait]
 impl HandleHit for DiskCacheHitHandler {
     /// Read cached body
@@ -54,24 +44,19 @@ impl HandleHit for DiskCacheHitHandler {
     /// Return `None` when no more body to read.
     async fn read_body(&mut self) -> Result<Option<bytes::Bytes>> {
         let mut buffer = vec![0; 32_000];
-
         let Ok(bytes_read) = self.target.read(&mut buffer) else {
             tracing::error!("failed to read completely from cache: {:?}", self.path);
             return Ok(None);
         };
-
         tracing::debug!("read from cache: {bytes_read}");
         if bytes_read == 0 {
             return Ok(None);
         }
-
         let slice = bytes::Bytes::copy_from_slice(&buffer[..bytes_read]);
-
         self.finished_buffer
             .extend_from_slice(&buffer[..bytes_read]);
         Ok(Some(slice))
     }
-
     /// Finish the current cache hit
     async fn finish(
         self: Box<Self>, // because self is always used as a trait object

@@ -1,3 +1,5 @@
+// /qompassai/vongola/crates/vongola/src/main.rs
+// Qompass AI Vongola Main Crate
 use std::{borrow::Cow, sync::Arc};
 
 use ::pingora::server::Server;
@@ -55,18 +57,13 @@ pub enum MsgProxy {
     clippy::complexity
 )]
 fn main() -> Result<(), anyhow::Error> {
-    // Configuration can be refreshed on file change
 
-    // Loads configuration from command-line, YAML or TOML sources
     let proxy_config =
         Arc::new(load("/etc/vongola/configs").expect("Failed to load configuration: "));
 
-    // Logging channel
     let (log_sender, log_receiver) = tokio::sync::mpsc::unbounded_channel::<Vec<u8>>();
 
-    // Receiver channel for Routes/Certificates/etc
     let (sender, mut _receiver) = tokio::sync::broadcast::channel::<MsgProxy>(10);
-    // let (appender, _guard) = get_non_blocking_writer(&proxy_config);
     let appender = services::logger::ProxyLog::new(
         log_sender,
         proxy_config.logging.enabled,
@@ -74,7 +71,6 @@ fn main() -> Result<(), anyhow::Error> {
         proxy_config.logging.error_logs_enabled,
     );
 
-    // Creates a tracing/logging subscriber based on the configuration provided
     if proxy_config.logging.format == LogFormat::Json {
         tracing_subscriber::fmt()
             .json()
@@ -111,14 +107,9 @@ fn main() -> Result<(), anyhow::Error> {
         proxy_server::http_proxy::HttpLB {},
     );
 
-    // Service: HTTPS Load Balancer (main service)
-    // The router will also handle health checks and failover in case of upstream
-    // failure
     let router = proxy_server::https_proxy::Router {};
     let mut https_secure_service = http_proxy_service(&pingora_server.configuration, router);
-    http_public_service.add_tcp("0.0.0.0:80");
-
-    // Worker threads per configuration
+    http_public_service.add_tcp("0.0.0.0:8080");
     https_secure_service.threads = proxy_config.worker_threads;
 
     // Setup tls settings and Enable HTTP/2
@@ -126,7 +117,6 @@ fn main() -> Result<(), anyhow::Error> {
     let mut tls_settings = TlsSettings::with_callbacks(Box::new(cert_store)).unwrap();
     tls_settings.enable_h2();
 
-    // tls_settings.set_session_cache_mode(SslSessionCacheMode::SERVER);
     tls_settings.set_servername_callback(move |ssl_ref, _| CertStore::sni_callback(ssl_ref));
 
     // For now this is a hardcoded recommendation based on
@@ -134,10 +124,7 @@ fn main() -> Result<(), anyhow::Error> {
     // but will be made configurable in the future
     tls_settings.set_min_proto_version(Some(pingora::tls::ssl::SslVersion::TLS1_2))?;
     tls_settings.set_max_proto_version(Some(pingora::tls::ssl::SslVersion::TLS1_3))?;
-
-    // Add TLS settings to the HTTPS service
     https_secure_service.add_tls_with_settings("0.0.0.0:443", None, tls_settings);
-
     // Add Prometheus service
     // let mut prometheus_service_http = Service::prometheus_http_service();
     // prometheus_service_http.add_tcp("0.0.0.0:9090");
@@ -152,12 +139,10 @@ fn main() -> Result<(), anyhow::Error> {
     // Listen on HTTP and HTTPS ports
     pingora_server.add_service(http_public_service);
     pingora_server.add_service(https_secure_service);
-
     tracing::info!(
         version = crate_version!(),
         workers = proxy_config.worker_threads,
         "running on :443 and :80"
     );
-
     pingora_server.run_forever();
 }

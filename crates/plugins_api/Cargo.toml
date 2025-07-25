@@ -6,9 +6,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 keywords = ["proxy", "https", "reverse-proxy", "load-balancer", "pingora"]
 categories = ["web-programming::http-server", "network-programming"]
-
 authors = ["Qompass AI <map@qompass.ai>"]
-
 readme = "../../README.md"
 homepage = "https://github.com/qompassai/vongola"
 repository = "https://github.com/qompassai/vongola"
@@ -20,4 +18,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 anyhow = "1.0.91"
-wit-bindgen = "0.34.0"
+wit-bindgen = "0.43.0"

@@ -140,13 +140,11 @@ pub struct RouteHeaderAdd {
     /// The value of the header
     pub value: Cow<'static, str>,
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RouteHeaderRemove {
     /// The name of the header to remove (ex.: "Server")
     pub name: Cow<'static, str>,
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RouteHeader {
     /// The name of the header
@@ -155,28 +153,21 @@ pub struct RouteHeader {
     /// The value of the header
     pub remove: Option<Vec<RouteHeaderRemove>>,
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RouteUpstream {
     /// The TCP address of the upstream (ex. 10.0.0.1/24 etc)
     pub ip: Cow<'static, str>,
-
     /// The port of the upstream (ex: 3000, 5000, etc.)
     pub port: u16,
-
     /// The network of the upstream (ex: 'public', 'shared') -- useful for
     /// docker discovery
     pub network: Option<String>,
-
     /// Optional: The weight of the upstream (ex: 1, 2, 3, etc.) --
     /// used for weight-based load balancing.
     pub weight: Option<i8>,
-
     pub sni: Option<String>,
-
     pub headers: Option<RouteHeader>,
 }
-
 impl Default for RouteUpstream {
     fn default() -> Self {
         RouteUpstream {
@@ -189,7 +180,6 @@ impl Default for RouteUpstream {
         }
     }
 }
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RouteSslCertificate {
     /// Whether to use a self-signed certificate if the certificate can't be
