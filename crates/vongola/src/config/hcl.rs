@@ -1,22 +1,21 @@
+// /qompassai/vongola/crates/vongola/src/config/hcl.rs
+// Qompass AI Vongola HCL Config
+// Copyright (C) 2025 Qompass AI, All rights reserved
+/////////////////////////////////////////////////////
 use std::{io::Read, path::Path};
-
 use hcl::{
     eval::{Context, FuncArgs},
     Value,
 };
-
 #[allow(clippy::module_name_repetitions)]
 pub struct HclFormat;
 impl figment::providers::Format for HclFormat {
     type Error = hcl::Error;
-
     const NAME: &'static str = "HCL";
-
     fn from_str<T: serde::de::DeserializeOwned>(string: &str) -> Result<T, Self::Error> {
         hcl::eval::from_str(string, &get_hcl_context())
     }
 }
-
 /// Function to retrieve the number of CPUs available on the system.
 /// Useful for setting the number of worker threads.
 /// Note that this function is not a part of the HCL specification, but a custom function.
@@ -51,28 +50,22 @@ fn read_hcl_file(args: FuncArgs) -> Result<Value, String> {
             path.to_string_lossy()
         ));
     }
-    // convert ath to absolute path
     let Ok(path) = std::path::absolute(path) else {
         return Err(format!("file not found: {}", path.to_string_lossy()));
     };
-
     let Ok(mut file) = std::fs::File::open(&path) else {
         return Err(format!("file not found: {}", path.to_string_lossy()));
     };
-
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
-
     let value = match hcl::eval::from_str::<Value>(&contents, &get_hcl_context()) {
         Ok(v) => v,
         Err(e) => {
             return Err(format!("failed to parse hcl file: {e}"));
         }
     };
-
     Ok(value)
 }
-
 /// Function to retrieve an environment variable from a given HCL template. Useful for secrets.
 /// Note that this function is not a part of the HCL specification, but a custom function.
 /// Note that the environment variable name must be defined or an error will be returned.
@@ -98,13 +91,10 @@ fn get_hcl_context<'a>() -> Context<'a> {
     let env_func = hcl::eval::FuncDef::builder()
         .param(hcl::eval::ParamType::String)
         .build(get_env_var);
-
     let read_file_func = hcl::eval::FuncDef::builder()
         .param(hcl::eval::ParamType::String)
         .build(read_hcl_file);
-
     let num_cpus_func = hcl::eval::FuncDef::builder().build(num_cpus);
-
     let mut context = hcl::eval::Context::new();
     context.declare_func("env", env_func);
     context.declare_func("import", read_file_func);
@@ -112,6 +102,5 @@ fn get_hcl_context<'a>() -> Context<'a> {
 
     context
 }
-
 /// hashicorp Configuration Language (HCL) provider for figment
 pub type Hcl = figment::providers::Data<HclFormat>;
