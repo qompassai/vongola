@@ -1,5 +1,8 @@
+// /qompassai/vongola/crates/vongola/src/config/hcl.rs
+// Qompass AI Vongola Config Module
+// Copyright (C) 2025 Qompass AI, All rights reserved
+/////////////////////////////////////////////////////
 use std::{borrow::Cow, collections::HashMap, path::PathBuf};
-
 use clap::{Args, Parser, ValueEnum};
 use figment::{
     providers::{Env, Format, Serialized, Yaml},
@@ -8,31 +11,21 @@ use figment::{
 use hcl::Hcl;
 use serde::{Deserialize, Deserializer, Serialize};
 use tracing::level_filters::LevelFilter;
-
 mod hcl;
 mod validate;
-
 /// Default fn for boolean values
 fn bool_true() -> bool { true }
-
 fn default_proto_version() -> ProtoVersion { ProtoVersion::V1_3 }
-
 fn default_proto_version_min() -> ProtoVersion { ProtoVersion::V1_2 }
-
 fn default_stale_secs() -> u32 { 60 }
-
 fn default_cache_expire_secs() -> u64 { 3600 }
-
 fn default_cache_type() -> RouteCacheType { RouteCacheType::MemCache }
-
 fn default_cache_path() -> PathBuf { PathBuf::from("/tmp") }
-
 #[derive(Debug, Serialize, Deserialize, Clone, ValueEnum)]
 pub(crate) enum DockerServiceMode {
     Swarm,
     Container,
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone, Args)]
 #[group(id = "docker")]
 pub struct Docker {
@@ -48,13 +41,13 @@ pub struct Docker {
     )]
     pub interval_secs: Option<u64>,
 
-    /// The docker endpoint to connect to (can be a unix socket or a tcp
+    /// The rootless docker endpoint to connect to (can be a unix socket or a tcp
     /// address)
     #[arg(
         long = "docker.endpoint",
         required = false,
         value_parser,
-        default_value = "unix:///var/run/docker.sock"
+        default_value = "unix:///run/user/1000/docker.sock"
     )]
     pub endpoint: Option<Cow<'static, str>>,
 
@@ -68,7 +61,6 @@ pub struct Docker {
         id = "docker.enabled"
     )]
     pub enabled: Option<bool>,
-
     /// Mode to use for the docker service
     #[serde(deserialize_with = "docker_mode_deser")]
     #[arg(
@@ -79,18 +71,16 @@ pub struct Docker {
     )]
     pub mode: DockerServiceMode,
 }
-
 impl Default for Docker {
     fn default() -> Self {
         Self {
             interval_secs: Some(15),
-            endpoint: Some(Cow::Borrowed("unix:///var/run/docker.sock")),
+            endpoint: Some(Cow::Borrowed("unix:///run/user/1000/docker.sock")),
             enabled: Some(false),
             mode: DockerServiceMode::Container,
         }
     }
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LetsEncrypt {
     /// The email to use for the let's encrypt account
@@ -98,14 +88,11 @@ pub struct LetsEncrypt {
     /// Whether to enable the background service that renews the certificates
     /// (default: true)
     pub enabled: Option<bool>,
-
     /// Use the staging let's encrypt server (default: true)
     pub staging: Option<bool>,
-
     /// Renewal check interval in seconds (default: 84600 - a day)
     pub renew_interval_secs: Option<u64>,
 }
-
 impl Default for LetsEncrypt {
     fn default() -> Self {
         Self {
@@ -116,14 +103,12 @@ impl Default for LetsEncrypt {
         }
     }
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Path {
     // TLS
     /// Path to the certificates directory (where the certificates are stored)
     pub lets_encrypt: PathBuf,
 }
-
 impl Default for Path {
     fn default() -> Self {
         Self {
@@ -131,57 +116,45 @@ impl Default for Path {
         }
     }
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RouteHeaderAdd {
     /// The name of the header
     pub name: Cow<'static, str>,
-
     /// The value of the header
     pub value: Cow<'static, str>,
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RouteHeaderRemove {
     /// The name of the header to remove (ex.: "Server")
     pub name: Cow<'static, str>,
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RouteHeader {
     /// The name of the header
     pub add: Option<Vec<RouteHeaderAdd>>,
-
     /// The value of the header
     pub remove: Option<Vec<RouteHeaderRemove>>,
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RouteUpstream {
     /// The TCP address of the upstream (ex. 10.0.0.1/24 etc)
     pub ip: Cow<'static, str>,
-
     /// The port of the upstream (ex: 3000, 5000, etc.)
     pub port: u16,
-
     /// The network of the upstream (ex: 'public', 'shared') -- useful for
     /// docker discovery
     pub network: Option<String>,
-
     /// Optional: The weight of the upstream (ex: 1, 2, 3, etc.) --
     /// used for weight-based load balancing.
     pub weight: Option<i8>,
-
     pub sni: Option<String>,
-
     pub headers: Option<RouteHeader>,
 }
-
 impl Default for RouteUpstream {
     fn default() -> Self {
         RouteUpstream {
-            ip: Cow::Borrowed("127.0.0.1"),
-            port: 80,
+            ip: Cow::Borrowed("[::1]"), 
+            port: 8080,
             network: None,
             weight: None,
             sni: None,
@@ -189,7 +162,6 @@ impl Default for RouteUpstream {
         }
     }
 }
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RouteSslCertificate {
     /// Whether to use a self-signed certificate if the certificate can't be
@@ -197,49 +169,41 @@ pub struct RouteSslCertificate {
     /// letsencrypt) (defaults to true)
     pub self_signed_on_failure: Option<bool>,
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RoutePathMatcher {
     /// Optional: pattern to match the path
     /// (ex: /api/v1/*)
     pub patterns: Vec<Cow<'static, str>>,
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RouteMatcher {
     pub path: Option<RoutePathMatcher>,
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RoutePlugin {
     /// The name of the plugin (must be a valid plugin name)
     pub name: Cow<'static, str>,
-
     /// The configuration for the plugin - we are not enforcing a specific
     /// format. Each plugin is in charge of parsing the configuration.
     /// The configuration is a key-value pair where the key is a string and
     /// the value is a JSON object (ex: `{ "key": "value" }`)
     pub config: Option<HashMap<Cow<'static, str>, serde_json::Value>>,
 }
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RouteSslPath {
     /// Path to the certificate .key file (e.g.
     /// `/etc/vongola/certs/my-host.key`)
     pub key: PathBuf,
-
     /// Path to the certificate .pem file (e.g.
     /// `/etc/vongola/certs/my-host.pem`)
     pub pem: PathBuf,
 }
-
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ProtoVersion {
     V1_1,
     V1_2,
     V1_3,
 }
-
 /// Converts a `pingora::tls::ssl::SslVersion` to a `ProtoVersion`
 impl From<pingora::tls::ssl::SslVersion> for ProtoVersion {
     fn from(v: pingora::tls::ssl::SslVersion) -> Self {
@@ -250,27 +214,23 @@ impl From<pingora::tls::ssl::SslVersion> for ProtoVersion {
         }
     }
 }
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RouteSsl {
     /// If provided, will be used instead of generating certificates from
     /// Let's Encrypt or self-signed certificates.
     pub path: Option<RouteSslPath>,
-
     /// The minimum and maximum protocol versions that the client can use.
     #[serde(
         default = "default_proto_version_min",
         deserialize_with = "proto_version_deser"
     )]
     pub min_proto: ProtoVersion,
-
     /// The maximum protocol version that the client can use.
     #[serde(
         default = "default_proto_version",
         deserialize_with = "proto_version_deser"
     )]
     pub max_proto: ProtoVersion,
-
     /// If the `self_signed_on_failure` is set to <true>,
     /// the server will use a self-signed certificate if the Let's Encrypt
     /// certificate issuance fails. This is useful for development and
@@ -284,34 +244,28 @@ pub struct RouteSsl {
     #[serde(default = "bool_true")]
     pub self_signed_fallback: bool,
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub enum RouteCacheType {
     Disk,
     MemCache,
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RouteCache {
     pub enabled: Option<bool>,
-
     #[serde(
         default = "default_cache_type",
         deserialize_with = "deserialize_cache_type"
     )]
     pub cache_type: RouteCacheType,
-
     #[serde(default = "default_cache_expire_secs")]
     pub expires_in_secs: u64,
     #[serde(default = "default_stale_secs")]
     pub stale_if_error_secs: u32,
     #[serde(default = "default_stale_secs")]
     pub stale_while_revalidate_secs: u32,
-
     #[serde(default = "default_cache_path")]
     pub path: PathBuf,
 }
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Route {
     /// The hostname that the proxy will accept
@@ -322,31 +276,23 @@ pub struct Route {
     /// also be used to create the certificate for the domain when `letsencrypt`
     /// is enabled.
     pub host: Cow<'static, str>,
-
     pub cache: Option<RouteCache>,
-
     /// Plugins that will be applied to the route/host
     /// (ex: rate limiting, oauth2, etc.)
     pub plugins: Option<Vec<RoutePlugin>>,
-
     /// SSL certificate configurations for the given host
     /// (ex: self-signed, path/object storage, etc.)
     pub ssl_certificate: Option<RouteSslCertificate>,
-
     /// SSL configuration for the route
     pub ssl: Option<RouteSsl>,
-
     /// Header modifications for the given route (remove, add, etc. )
     pub headers: Option<RouteHeader>,
-
     /// The upstreams to which the request will be proxied,
     pub upstreams: Vec<RouteUpstream>,
-
     /// The matcher for the route
     /// (ex: path, query, etc.)
     pub match_with: Option<RouteMatcher>,
 }
-
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ValueEnum)]
 pub enum LogLevel {
     Debug,
@@ -355,7 +301,6 @@ pub enum LogLevel {
     Error,
     Trace,
 }
-
 /// Transforms our custom `LogLevel` enum into a
 /// `tracing::level_filters::LevelFilter` enum used by the `tracing` crate.
 impl From<&LogLevel> for tracing::level_filters::LevelFilter {
@@ -369,7 +314,6 @@ impl From<&LogLevel> for tracing::level_filters::LevelFilter {
         }
     }
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone, Default, Eq, PartialEq)]
 pub enum LogRotation {
     #[default]
@@ -378,13 +322,11 @@ pub enum LogRotation {
     Hourly,
     Minutely,
 }
-
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ValueEnum)]
 pub enum LogFormat {
     Json,
     Pretty,
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone, Args)]
 #[group(id = "logging", requires = "level")]
 pub struct Logging {
@@ -408,7 +350,6 @@ pub struct Logging {
         default_value = "info"
     )]
     pub level: LogLevel,
-
     /// Whether to log access logs (request, duration, headers etc).
     #[arg(
         long = "log.access_logs_enabled",
@@ -417,7 +358,6 @@ pub struct Logging {
         default_value = "true"
     )]
     pub access_logs_enabled: bool,
-
     /// Whether to log error logs (errors, panics, etc) from the Rust runtime.
     #[arg(
         long = "log.error_logs_enabled",
@@ -426,7 +366,6 @@ pub struct Logging {
         default_value = "true"
     )]
     pub error_logs_enabled: bool,
-
     /// The format of the log output
     #[serde(deserialize_with = "log_format_deser")]
     #[arg(
@@ -550,29 +489,21 @@ pub(crate) struct Config {
     #[clap(short, required = false, long, default_value = "./")]
     #[allow(clippy::struct_field_names)]
     pub config_path: Cow<'static, str>,
-
     /// General config
     #[command(flatten)]
     pub logging: Logging,
-
     #[command(flatten)]
     pub auto_reload: AutoReload,
-
     #[command(flatten)]
     pub docker: Docker,
-
     #[clap(skip)]
     pub lets_encrypt: LetsEncrypt,
-
     /// Configuration for paths (TLS, config file, etc.)
     #[clap(skip)]
     pub paths: Path,
-
     /// The routes to be proxied to.
     #[clap(skip)]
     pub routes: Vec<Route>,
-    // Listeners -- a list of specific listeners and upstrems
-    // that don't necessarily need to be HTTP/HTTPS related
     // pub listeners: Vec<ConfigListener>,
 }
 
@@ -776,12 +707,10 @@ mod tests {
                 network: "public"
       "#
     }
-
     #[test]
     fn test_load_config_from_yaml() {
         figment::Jail::expect_with(|jail| {
             let tmp_dir = jail.directory().to_string_lossy();
-
             jail.create_file(format!("{}/vongola.yaml", tmp_dir), helper_config_file())?;
 
             let config = load(&tmp_dir);
@@ -831,21 +760,16 @@ mod tests {
                 proxy_config.docker.endpoint,
                 Some(Cow::Borrowed("http://localhost:2375"))
             );
-
             assert_eq!(proxy_config.lets_encrypt.staging, Some(false));
             assert_eq!(proxy_config.lets_encrypt.email, "my-real-email@domain.com");
             assert_eq!(proxy_config.lets_encrypt.renew_interval_secs, Some(60));
-
             assert_eq!(proxy_config.routes[0].host, "changed.example.com");
             assert_eq!(proxy_config.routes[0].upstreams[0].ip, "10.0.1.2/24");
-
             let matcher = proxy_config.routes[0].match_with.as_ref().unwrap();
-
             assert_eq!(
                 matcher.path.as_ref().unwrap().patterns,
                 vec![Cow::Borrowed("/api/v1/:entity/:action*")]
             );
-
             assert_eq!(
                 proxy_config.paths.lets_encrypt,
                 PathBuf::from("/test/letsencrypt")
@@ -872,7 +796,6 @@ mod tests {
             Ok(())
         })
     }
-
     #[test]
     fn test_load_config_with_defaults_and_yaml() {
         figment::Jail::expect_with(|jail| {
@@ -910,20 +833,16 @@ mod tests {
             assert!(logging.access_logs_enabled);
             assert!(logging.error_logs_enabled);
             assert_eq!(proxy_config.routes.len(), 1);
-
             assert_eq!(proxy_config.docker.enabled, Some(false));
             assert_eq!(proxy_config.docker.interval_secs, Some(15));
             assert_eq!(
                 proxy_config.docker.endpoint,
-                Some(Cow::Borrowed("unix:///var/run/docker.sock"))
+                Some(Cow::Borrowed("unix:///run/user/1000/docker.sock"))
             );
-
             assert_eq!(letsencrypt.email, "domain@valid.com");
             assert_eq!(letsencrypt.enabled, Some(true));
             assert_eq!(letsencrypt.staging, Some(true));
-
             assert_eq!(paths.lets_encrypt.as_os_str(), "/etc/vongola/letsencrypt");
-
             let route = &proxy_config.routes[0];
             let plugins = route.plugins.as_ref().unwrap();
             let plugin_config = plugins[0].config.as_ref().unwrap();
@@ -939,12 +858,10 @@ mod tests {
             Ok(())
         });
     }
-
     #[test]
     fn test_load_config_from_hcl() {
         figment::Jail::expect_with(|jail| {
             let tmp_dir = jail.directory().to_string_lossy();
-
             jail.create_file(
                 format!("{}/vongola.hcl", tmp_dir),
                 r#"
@@ -953,7 +870,7 @@ mod tests {
                 docker {
                     enabled = true
                     interval_secs = 30
-                    endpoint = "unix:///var/run/docker.sock"
+                    endpoint = "unix:///run/user/1000/docker.sock"
                 }
                 lets_encrypt {
                     email = "domain@valid.com"
@@ -965,19 +882,16 @@ mod tests {
                 }
                     "#,
             )?;
-
             let config = load(&tmp_dir);
             let proxy_config = config.unwrap();
-
             assert_eq!(proxy_config.service_name, "hcl-service");
             assert_eq!(proxy_config.worker_threads, Some(8));
             assert_eq!(proxy_config.docker.enabled, Some(true));
             assert_eq!(proxy_config.docker.interval_secs, Some(30));
             assert_eq!(
                 proxy_config.docker.endpoint,
-                Some(Cow::Borrowed("unix:///var/run/docker.sock"))
+                Some(Cow::Borrowed("unix:///run/user/1000/docker.sock"))
             );
-
             assert_eq!(proxy_config.lets_encrypt.email, "domain@valid.com");
             assert_eq!(proxy_config.lets_encrypt.enabled, Some(true));
             assert_eq!(proxy_config.lets_encrypt.staging, Some(false));

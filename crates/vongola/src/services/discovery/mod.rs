@@ -1,6 +1,10 @@
 // /qompassai/vongola/crates/vongola/src/services/discovery/mod.rs
+// Qompass AI Vongola Service Discovery Module
+// # Copyright (C) 2025 Qompass AI, All rights reserved
+/////////////////////////////////////////////////////////////////
 use std::net::ToSocketAddrs;
 use std::{borrow::Cow, str::FromStr, sync::Arc, time::Duration};
+
 use async_trait::async_trait;
 use http::{HeaderName, HeaderValue};
 use openssl::pkey::PKey;
@@ -11,6 +15,7 @@ use pingora::{
     services::Service,
 };
 use tokio::sync::broadcast::Sender;
+
 use crate::config::{Route, RouteCache, RouteUpstream};
 use crate::MsgRoute;
 use crate::{
@@ -26,7 +31,9 @@ impl RoutingService {
     pub fn new(config: Arc<Config>, broadcast: Sender<MsgProxy>) -> Self {
         Self { config, broadcast }
     }
-    /// From a given configuration file, create the static load balancing configuration
+
+    /// From a given configuration file, create the static load balancing
+    /// configuration
     fn add_routes_from_config(&mut self) {
         for route in &self.config.routes {
             let self_signed_cert_on_failure = route
@@ -53,6 +60,7 @@ impl RoutingService {
             tracing::debug!("Added route: {}, {:?}", route.host, route.upstreams);
         }
     }
+
     /// Watch for new routes being added and update the Router Store
     fn watch_for_route_changes(route: MsgRoute) {
         // TODO: refactor
@@ -114,12 +122,10 @@ impl Service for RoutingService {
             Self::watch_for_route_changes(route);
         }
     }
-    fn name(&self) -> &str {
-        "proxy_service_discovery"
-    }
-    fn threads(&self) -> Option<usize> {
-        Some(1)
-    }
+
+    fn name(&self) -> &str { "proxy_service_discovery" }
+
+    fn threads(&self) -> Option<usize> { Some(1) }
 }
 fn has_new_backend(host: &str, upstream_input: &LoadBalancer<RoundRobin>) -> bool {
     if let Some(route_container) = stores::get_route_by_key(host) {
@@ -249,35 +255,64 @@ fn add_route_ssl_to_store(route: &Route) -> Result<(), anyhow::Error> {
 }
 #[cfg(test)]
 mod test {
-    use std::net::{ToSocketAddrs, SocketAddr, IpAddr};
- fn pick_addr<A: ToSocketAddrs>(input: A) -> Option<SocketAddr> {
-        let addrs: Vec<_> = input.to_socket_addrs().ok()?.collect();
-        // Prefer IPv6, fallback to IPv4
-        addrs.iter()
-            .find(|a| matches!(a.ip(), IpAddr::V6(_)))
-            .cloned()
-            .or_else(|| addrs.into_iter().find(|a| matches!(a.ip(), IpAddr::V4(_))))
+    use std::net::{IpAddr, SocketAddr, ToSocketAddrs};
+    /// Try to resolve the input to a SocketAddr, preferring IPv6 over IPv4.
+    /// Prints all resolutions for debugging.
+    fn pick_addr<A: ToSocketAddrs>(input: A) -> Option<SocketAddr> {
+        let addrs: Vec<_> = match input.to_socket_addrs() {
+            Ok(iter) => iter.collect(),
+            Err(e) => {
+                eprintln!("Error resolving address: {e:?}");
+                return None;
+            }
+        };
+        println!("Resolved addresses: {:?}", addrs);
+        if let Some(addr) = addrs.iter().find(|a| matches!(a.ip(), IpAddr::V6(_))) {
+            println!("Picked IPv6: {:?}", addr);
+            Some(*addr)
+        } else if let Some(addr) = addrs.iter().find(|a| matches!(a.ip(), IpAddr::V4(_))) {
+            println!("Picked IPv4: {:?}", addr);
+            Some(*addr)
+        } else {
+            eprintln!("No IPv4 or IPv6 addresses found!");
+            None
+        }
     }
     #[test]
     fn test_socket_addr() {
-         let addr = "[::1]:8080".parse::<SocketAddr>().unwrap();
-        assert_eq!(addr.ip(), "::1".parse::<IpAddr>().unwrap());
-        assert_eq!(addr.port(), 8080);
+        let addr = "[::1]:8080".parse::<SocketAddr>().unwrap();
+        println!("Parsed IPv6 literal: {:?}", addr);
+        assert_eq!(
+            addr.ip(),
+            "::1".parse::<IpAddr>().unwrap(),
+            "IPv6 address mismatch"
+        );
+        assert_eq!(addr.port(), 8080, "IPv6 port mismatch");
         let addr = "127.0.0.1:8080".parse::<SocketAddr>().unwrap();
-        assert_eq!(addr.ip(), "127.0.0.1".parse::<IpAddr>().unwrap());
-        assert_eq!(addr.port(), 8080);
+        println!("Parsed IPv4 literal: {:?}", addr);
+        assert_eq!(
+            addr.ip(),
+            "127.0.0.1".parse::<IpAddr>().unwrap(),
+            "IPv4 address mismatch"
+        );
+        assert_eq!(addr.port(), 8080, "IPv4 port mismatch");
     }
     #[test]
     fn test_domain_addr() {
-        let addrs: Vec<_> = "example.com:8080".to_socket_addrs().unwrap().collect();
-        if let Some(ipv6_addr) = addrs.iter().find(|a| matches!(a.ip(), IpAddr::V6(_))) {
-            assert_eq!(ipv6_addr.port(), 8080);
-        } else if let Some(ipv4_addr) = addrs.iter().find(|a| matches!(a.ip(), IpAddr::V4(_))) {
-            assert_eq!(ipv4_addr.ip().to_string(), "93.184.216.34"); // (note: subject to change)
-            assert_eq!(ipv4_addr.port(), 8080);
-        } else {
-            panic!("No address found for example.com");
+        let domain = "example.com:8080";
+        println!("Testing pick_addr with domain `{}`", domain);
+        let addr = pick_addr(domain).expect("No address found for example.com");
+        println!("pick_addr result: {:?}", addr);
+        assert_eq!(addr.port(), 8080, "Expected port 8080 for resolved address");
+        match addr.ip() {
+            IpAddr::V6(ip6) => println!("Resolved IPv6: {}", ip6),
+            IpAddr::V4(ip4) => println!("Resolved IPv4: {}", ip4),
         }
+        assert!(
+            addr.is_ipv6() || addr.is_ipv4(),
+            "Address is neither IPv4 nor IPv6: {:?}",
+            addr
+        );
     }
 }
 
@@ -294,10 +329,12 @@ mod test {
 
 //     fn setup_route_store_with_entry() -> RouteStore {
 //         let store = setup_mock_route_store();
-//         let upstreams = vec!["127.0.0.1:8080".to_string(), "127.0.0.2:8080".to_string()];
+//         let upstreams = vec!["127.0.0.1:8080".to_string(),
+// "127.0.0.2:8080".to_string()];
 
 //         let load_balancer =
-//             LoadBalancer::<RoundRobin>::try_from_iter(upstreams.into_iter()).unwrap();
+//
+// LoadBalancer::<RoundRobin>::try_from_iter(upstreams.into_iter()).unwrap();
 //         store.insert(
 //             "example.com".to_string(),
 //             RouteStoreContainer::new(load_balancer),
@@ -370,7 +407,8 @@ mod test {
 //     fn test_has_new_backend_with_change() {
 //         let store = setup_route_store_with_entry();
 //         let host = "example.com";
-//         let upstreams = LoadBalancer::try_from_iter(vec!["127.0.0.3:8080".to_string()]).unwrap();
+//         let upstreams =
+// LoadBalancer::try_from_iter(vec!["127.0.0.3:8080".to_string()]).unwrap();
 
 //         assert!(has_new_backend(&store, host, &upstreams));
 //     }
