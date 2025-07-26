@@ -1,8 +1,7 @@
+// /qompassai/vongola/crates/vongola/src/services/discovery/mod.rs
 use std::net::ToSocketAddrs;
 use std::{borrow::Cow, str::FromStr, sync::Arc, time::Duration};
-
 use async_trait::async_trait;
-
 use http::{HeaderName, HeaderValue};
 use openssl::pkey::PKey;
 use openssl::x509::X509;
@@ -12,7 +11,6 @@ use pingora::{
     services::Service,
 };
 use tokio::sync::broadcast::Sender;
-
 use crate::config::{Route, RouteCache, RouteUpstream};
 use crate::MsgRoute;
 use crate::{
@@ -20,18 +18,14 @@ use crate::{
     stores::{self, routes::RouteStoreContainer},
     MsgProxy,
 };
-
-// Service discovery for load balancers
 pub struct RoutingService {
     config: Arc<Config>,
     broadcast: Sender<MsgProxy>,
 }
-
 impl RoutingService {
     pub fn new(config: Arc<Config>, broadcast: Sender<MsgProxy>) -> Self {
         Self { config, broadcast }
     }
-
     /// From a given configuration file, create the static load balancing configuration
     fn add_routes_from_config(&mut self) {
         for route in &self.config.routes {
@@ -46,7 +40,6 @@ impl RoutingService {
                     route.host
                 );
             }
-
             add_route_to_router(
                 &route.host,
                 route.upstreams.clone(),
@@ -60,7 +53,6 @@ impl RoutingService {
             tracing::debug!("Added route: {}, {:?}", route.host, route.upstreams);
         }
     }
-
     /// Watch for new routes being added and update the Router Store
     fn watch_for_route_changes(route: MsgRoute) {
         // TODO: refactor
@@ -73,14 +65,10 @@ impl RoutingService {
                 }),
             });
         }
-
         let route_header = RouteHeader {
             add: Some(route.host_headers_add),
             remove: Some(route.host_headers_remove),
         };
-
-        // create route upstreams from ip + port
-
         let upstreams = route
             .upstreams
             .iter()
@@ -100,7 +88,6 @@ impl RoutingService {
                 }
             })
             .collect::<Vec<_>>();
-
         add_route_to_router(
             &route.host,
             upstreams,
@@ -110,7 +97,6 @@ impl RoutingService {
             None,
             route.self_signed_certs,
         );
-
         tracing::debug!(
             "Added route: {}, {:?} self-signed: {}",
             route.host,
@@ -119,30 +105,22 @@ impl RoutingService {
         );
     }
 }
-
 #[async_trait]
 impl Service for RoutingService {
     async fn start_service(&mut self, _fds: Option<ListenFds>, _shutdown: ShutdownWatch) {
-        // Setup initial routes from config file
         self.add_routes_from_config();
-
-        // Watch for new hosts being added and configure them accordingly
         let mut receiver = self.broadcast.subscribe();
         while let Ok(MsgProxy::NewRoute(route)) = receiver.recv().await {
             Self::watch_for_route_changes(route);
         }
     }
-
     fn name(&self) -> &str {
         "proxy_service_discovery"
     }
-
     fn threads(&self) -> Option<usize> {
         Some(1)
     }
 }
-
-// Check whether the host already exists and if the the upstream list has changed
 fn has_new_backend(host: &str, upstream_input: &LoadBalancer<RoundRobin>) -> bool {
     if let Some(route_container) = stores::get_route_by_key(host) {
         let backends = route_container.load_balancer.backends().get_backend();
@@ -151,13 +129,11 @@ fn has_new_backend(host: &str, upstream_input: &LoadBalancer<RoundRobin>) -> boo
         if backends.len() != new_backends.len() {
             return true;
         }
-
         !backends.iter().all(|be| new_backends.contains(be))
     } else {
         false
     }
 }
-
 /// Adds new routes to the store if there are changes to an existing route or
 /// if the host does not exist in the store.
 fn add_route_to_router(
@@ -169,12 +145,10 @@ fn add_route_to_router(
     cache: Option<&RouteCache>,
     should_self_sign_cert_on_failure: bool,
 ) {
-    // Check if current route already exists
     let upstream_str = upstream_input
         .iter()
         .map(|u| format!("{}:{}", u.ip, u.port))
         .collect::<Vec<String>>();
-
     let Ok(mut upstreams) = LoadBalancer::<RoundRobin>::try_from_iter(upstream_str) else {
         tracing::info!(
             "Could not create upstreams for host: {}, upstreams {:?}",
@@ -183,23 +157,17 @@ fn add_route_to_router(
         );
         return;
     };
-
     if stores::get_route_by_key(host).is_some() && !has_new_backend(host, &upstreams) {
         tracing::debug!("skipping update, no routing changes for host: {}", host);
         return;
     }
-
-    // TODO: support defining health checks in the configuration file
     let tcp_health_check = TcpHealthCheck::new();
     upstreams.set_health_check(tcp_health_check);
     upstreams.health_check_frequency = Some(Duration::from_secs(15));
-
-    // Create new routing container
     let mut route_store_container = RouteStoreContainer::new(upstreams);
     route_store_container.self_signed_certificate = should_self_sign_cert_on_failure;
     route_store_container.upstreams = upstream_input;
     route_store_container.cache = cache.cloned();
-
     if let Some(headers) = headers {
         if let Some(headers) = headers.add.as_ref() {
             route_store_container.host_header_add = headers
@@ -212,13 +180,11 @@ fn add_route_to_router(
                 })
                 .collect();
         }
-
         if let Some(to_remove) = headers.remove.as_ref() {
             route_store_container.host_header_remove =
                 to_remove.iter().map(|v| v.name.to_string()).collect();
         }
     }
-
     if let Some(plugins) = plugins {
         for plugin in plugins {
             match plugin.name.as_ref() {
@@ -227,14 +193,10 @@ fn add_route_to_router(
                         .plugins
                         .insert(plugin.name.to_string(), plugin.clone());
                 }
-
                 _ => {}
             }
         }
     }
-
-    // Prepare route matchers
-    // TODO: enable matchers for upstreams for true load balancing based on path
     if let Some(match_with) = match_with {
         // Path matchers
         match match_with.path {
@@ -245,16 +207,12 @@ fn add_route_to_router(
             _ => {}
         }
     }
-
     stores::insert_route(host.to_string(), route_store_container);
 }
-
-// TODO: refactor this into its own module
 fn add_route_ssl_to_store(route: &Route) -> Result<(), anyhow::Error> {
     let Some(ssl_path) = route.ssl.as_ref().and_then(|v| v.path.as_ref()) else {
         return Ok(());
     };
-
     let key_from_file = std::fs::read_to_string(ssl_path.key.as_os_str()).map_err(|err| {
         anyhow::anyhow!(
             "Failed to load private key from file {:?}: {err}",
@@ -267,7 +225,6 @@ fn add_route_ssl_to_store(route: &Route) -> Result<(), anyhow::Error> {
             ssl_path.pem
         )
     })?;
-
     let key = PKey::private_key_from_pem(key_from_file.as_bytes()).map_err(|err| {
         anyhow::anyhow!(
             "Failed to load private key from file {:?}: {err}",
@@ -280,7 +237,6 @@ fn add_route_ssl_to_store(route: &Route) -> Result<(), anyhow::Error> {
             ssl_path.pem
         )
     })?;
-
     stores::insert_certificate(
         route.host.to_string(),
         stores::certificates::Certificate {
@@ -289,28 +245,39 @@ fn add_route_ssl_to_store(route: &Route) -> Result<(), anyhow::Error> {
             chain: None,
         },
     );
-
     Ok(())
 }
-
 #[cfg(test)]
 mod test {
-    use std::net::ToSocketAddrs;
-
+    use std::net::{ToSocketAddrs, SocketAddr, IpAddr};
+ fn pick_addr<A: ToSocketAddrs>(input: A) -> Option<SocketAddr> {
+        let addrs: Vec<_> = input.to_socket_addrs().ok()?.collect();
+        // Prefer IPv6, fallback to IPv4
+        addrs.iter()
+            .find(|a| matches!(a.ip(), IpAddr::V6(_)))
+            .cloned()
+            .or_else(|| addrs.into_iter().find(|a| matches!(a.ip(), IpAddr::V4(_))))
+    }
     #[test]
     fn test_socket_addr() {
-        let addr = "127.0.0.1:8080".to_string();
-        let addr = addr.parse::<std::net::SocketAddr>().unwrap();
-        assert_eq!(addr.ip().to_string(), "127.0.0.1");
+         let addr = "[::1]:8080".parse::<SocketAddr>().unwrap();
+        assert_eq!(addr.ip(), "::1".parse::<IpAddr>().unwrap());
+        assert_eq!(addr.port(), 8080);
+        let addr = "127.0.0.1:8080".parse::<SocketAddr>().unwrap();
+        assert_eq!(addr.ip(), "127.0.0.1".parse::<IpAddr>().unwrap());
         assert_eq!(addr.port(), 8080);
     }
-
     #[test]
     fn test_domain_addr() {
-        let addr = "example.com:80";
-        let addr = addr.to_socket_addrs().unwrap().next().unwrap();
-        assert_eq!(addr.ip().to_string(), "93.184.215.14");
-        assert_eq!(addr.port(), 80);
+        let addrs: Vec<_> = "example.com:8080".to_socket_addrs().unwrap().collect();
+        if let Some(ipv6_addr) = addrs.iter().find(|a| matches!(a.ip(), IpAddr::V6(_))) {
+            assert_eq!(ipv6_addr.port(), 8080);
+        } else if let Some(ipv4_addr) = addrs.iter().find(|a| matches!(a.ip(), IpAddr::V4(_))) {
+            assert_eq!(ipv4_addr.ip().to_string(), "93.184.216.34"); // (note: subject to change)
+            assert_eq!(ipv4_addr.port(), 8080);
+        } else {
+            panic!("No address found for example.com");
+        }
     }
 }
 

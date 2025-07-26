@@ -1,18 +1,15 @@
+// /qompassai/vongola/crates/vongola/src/plugins/oauth2/provider.rs
 use std::{
     borrow::Cow,
     fmt::{Display, Formatter},
 };
-
 use crate::plugins::jwt::JwtClaims;
-
 use super::{github::GithubOauthService, workos::WorkosOauthService};
-
 pub struct Provider {
     pub(super) typ: OauthType,
     pub(super) client_id: String,
     pub(super) client_secret: String,
 }
-
 impl Provider {
     /// Get the Oauth callback URL for the given provider
     pub fn get_oauth_callback_url(&self, state: &str) -> String {

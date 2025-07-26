@@ -51,35 +51,24 @@ impl EventHandler for FileWatcherServiceHandler {
         };
 
         // If no .hcl can be found, skip
-        if !n
-            .paths
-            .iter()
-            .any(|v| v.extension().is_some_and(|v| v == "hcl"))
-        {
+        if !n.paths.iter().any(|v| v.extension().is_some_and(|v| v == "hcl")) {
             tracing::info!("no .hcl file found, skipping {:?}", n.paths);
             return;
         }
 
         let Ok(cmd) = std::env::current_exe() else {
+            tracing::error!("could not get path to current exe for auto_reload");
             return;
         };
 
-        let current_pid = std::process::id();
-
-        // remove the command path, take the rest
         let current_args = std::env::args().skip(1);
-
-        // restart the process
-        std::process::Command::new(cmd).args(current_args).exec();
 
         tracing::warn!("restarting Vongola server");
 
-        // kill existing process
-        nix::sys::signal::kill(
-            nix::unistd::Pid::from_raw(current_pid.try_into().unwrap()),
-            nix::sys::signal::Signal::SIGQUIT,
-        )
-        .unwrap();
+        // Attempt to exec; on failure, log and exit
+        let exec_err = std::process::Command::new(cmd).args(current_args).exec();
+        tracing::error!("exec failed: {exec_err}");
+        std::process::exit(1);
     }
 }
 

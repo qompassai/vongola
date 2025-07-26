@@ -1,27 +1,19 @@
-# Builder Stage
-FROM archlinux:latest AS builder
+# /qompassai/vongola/Containerfile
+# Qompass AI Vongola Containerfile
+# Copyright (C) 2025 Qompass AI, All rights reserved
+####################################################
+FROM nixos/nix:2.21.1 AS builder
 
-RUN pacman -Syu --noconfirm \
-  && pacman -S --noconfirm base-devel ca-certificates openssl pkgconf curl git cmake clang make gcc libssl \
-  && pacman -Scc --noconfirm
-
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
+RUN nix-env -ifA nixpkgs.rustup nixpkgs.cargo nixpkgs.pkg-config nixpkgs.openssl nixpkgs.cmake nixpkgs.clang nixpkgs.git
+RUN rustup toolchain install stable && rustup default stable
 
 WORKDIR /app
 COPY . /app
 
-# Build the Rust application
 RUN cargo build --release
 
-# Runtime Stage
-FROM archlinux:base
-
-RUN pacman -Syu --noconfirm && pacman -S --noconfirm ca-certificates && pacman -Scc --noconfirm
-
+FROM scratch AS runtime
 COPY --from=builder /app/target/release/vongola /app/vongola
-
 WORKDIR /app
-EXPOSE 80 443
+EXPOSE 8080 4443
 ENTRYPOINT ["/app/vongola"]
-

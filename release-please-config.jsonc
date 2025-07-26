@@ -1,9 +1,12 @@
+// /qompassai/vongola/release-please-config.jsonc
+// Qompass AI Vongola Release config
+// Copyright (C) 2025 Qompass AI, All rights reserved
+////////////////////////////////////////////////////
 {
 	"plugins": ["cargo-workspace"],
 	"commit-search-depth": 10,
 	"packages": {
 		"crates/vongola": {
-			"changelog-path": "/CHANGELOG.md",
 			"release-type": "rust",
 			"bump-minor-pre-major": false,
 			"initial-version": "0.4.8",
@@ -13,7 +16,6 @@
 			"prerelease": false
 		},
 		"crates/plugins_api": {
-			"changelog-path": "/CHANGELOG.md",
 			"release-type": "rust",
 			"initial-version": "0.1.0",
 			"bump-minor-pre-major": false,
