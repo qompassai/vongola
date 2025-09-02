@@ -41,7 +41,6 @@ curl -fsSL https://raw.githubusercontent.com/qompassai/vongola/main/scripts/quic
 # Qompass AI Quick Start Script
 # Copyright (C) 2025 Qompass AI, All rights reserved
 ####################################################
-        #:TO DO
       </pre>
     </details>
     <p>Or, <a href="https://github.com/qompassai/vongola/blob/main/scripts/quickstart.sh" target="_blank">View the quickstart script</a>.</p>
