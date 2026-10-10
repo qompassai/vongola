@@ -463,3 +463,97 @@ tree's stall (SIGTERM ignored, SIGKILL required) is the named
 regression this contract exists to prevent.
 
 </details>
+
+## 15. OpenSSL 4.0 spike findings (2026-10-10)
+
+<details>
+<summary>Variant builds and passes every gate; ECH is blocked at the Rust bindings layer, not the C library</summary>
+
+Spike branch `spike/openssl4-vongola-20261010` (off
+`cleanroom/vongola-20261010`). The default package is unchanged:
+it still builds against nixpkgs OpenSSL 3.5.8 from the frozen
+`Cargo.lock`, and was re-verified green after the spike changes.
+
+What the spike adds:
+
+- `packages.openssl4`: OpenSSL **4.0.3** (latest 4.0.x; released
+  2026-09-29) built from the pinned upstream tarball. SHA256 is
+  the official checksum published at openssl.org
+  (`325b5c806167c13b40b1ffeadfe0248197c00eccc4cf123ec1e28d2d2fd216d9`),
+  carried in the flake as a fixed-output fetch. Primo's system
+  OpenSSL (3.6.5) is untouched; this is flake-contained.
+- `packages.vongola-openssl4`: the same tree built against 4.0.3,
+  with its own lockfile `Cargo-openssl4.lock` swapped in during
+  the variant's patch phase only. The unlock was minimal and is
+  exactly two packages: `openssl-sys` 0.9.109 -> 0.9.114 (first
+  release with OpenSSL 4.x support) and `openssl` 0.10.73 ->
+  0.10.78 (earliest paired release with 4.x support). A sys-only
+  bump does NOT compile: the `openssl` crate fails with 3 errors
+  on the const-qualified X.509 return types OpenSSL 4.0
+  introduced (`ossl400`). No first-party Rust source changed.
+
+Gates, variant vs the 3.5.8 baseline:
+
+- In-sandbox `cargo test`: **51 passed / 0 failed** (baseline
+  51/51 — identical).
+- `scripts/smoke.sh` against a release build of the variant:
+  **38 PASS / 0 FAIL** (baseline 38/0 — identical). Negotiated
+  TLS 1.3 group is still `X25519MLKEM768`; TLS 1.2 refused;
+  unknown SNI refused; Tor/NAT/chains/MCP/dashboard checks all
+  pass unchanged.
+- TLS groups offered by the 4.0.3 build: the full 3.5/3.6 set
+  (`MLKEM512/768/1024`, `SecP256r1MLKEM768`, `X25519MLKEM768`,
+  `SecP384r1MLKEM1024`, classical + brainpool + FFDHE) plus
+  `curveSM2` and the SM2 hybrid `curveSM2MLKEM768`, which
+  vongola does not offer (config allowlist unchanged).
+- Handshake sanity (same machine, same client — system
+  `openssl s_client`, 30 sequential full handshakes each):
+  3.5.8 median 9.54 ms / mean 9.49 ms; 4.0.3 median 8.73 ms /
+  mean 8.97 ms. No regression; read as parity (the measurement
+  is process-spawn dominated).
+
+ECH (RFC 9849) determination — the point of the spike:
+
+- (a) **C library: ready, proven.** The built 4.0.3 ships
+  `include/openssl/ech.h` and exports the full server-side ECH
+  API from libssl: the `OSSL_ECHSTORE_*` family,
+  `SSL_CTX_set1_echstore`, `SSL_CTX_get1_echstore`,
+  `SSL_ech_get1_status`, `SSL_ech_get1_retry_config`, and
+  friends (symbol-verified in the built output).
+- (b) **Rust bindings: absent — this is the blocking layer.**
+  Neither `openssl-sys` 0.9.114 nor `openssl` 0.10.78 contains
+  a single ECH symbol (tree-wide search: zero hits), and
+  `pingora-openssl` 0.9.0 has none either. The missing surface
+  is small: roughly 8-10 FFI functions plus the one opaque
+  `OSSL_ECHSTORE` type. Its honest home is upstream
+  rust-openssl (handwritten `openssl-sys` bindings + a safe
+  `openssl` wrapper), or a small dedicated shim crate. It does
+  NOT belong in vongola's first-party crates, which are
+  `#![forbid(unsafe_code)]`; no unsafe FFI was hacked in for
+  this spike.
+- (c) **Pingora/vongola: the plug point already exists.**
+  `TlsSettings` derefs mutably to `SslAcceptorBuilder`, and
+  the openssl crate exposes `SslContextBuilder::as_ptr`, so
+  an ECH store could be attached at exactly the TLS setup
+  site in `main.rs` the day a binding exists — no Pingora
+  restructuring. The remaining work after a binding is
+  operational, not architectural: generating/rotating ECH
+  key pairs (`OSSL_ECHSTORE_write_pem` family), carrying
+  them in fleet config bundles, and publishing the
+  `ECHConfigList` in DNS HTTPS (type 65) records for the
+  served hosts.
+
+Smallest next step that turns ECH on: one upstream-style
+binding patch (openssl-sys handwritten ECH bindings + safe
+wrapper, ~10 functions), then a `tls.ech` config block in
+vongola (key/config paths, fail-closed like every other
+knob) wired at the existing `TlsSettings` site, proven by
+an `s_client` ECH handshake against the 4.0 CLI.
+
+Verdict: **keep as a variant.** The 4.0 build is proven equal
+on every gate today, but 4.0 is not an LTS line and buys no
+shipping feature until the ECH binding exists. Revisit as
+default when (1) the binding lands, or (2) nixpkgs ships
+OpenSSL 4.x itself.
+
+</details>
