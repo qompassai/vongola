@@ -37,8 +37,11 @@
 //!   HTTPS-record publication, and attach the store to an `SSL_CTX`.
 //! - [`connection_status`] / [`retry_config`]: per-connection outcome queries
 //!   for an established (or failed) handshake.
-//! - [`install_ctx_status_callback`] + [`status_counters`]: process-wide
-//!   accepted/rejected counters fed by OpenSSL's own ECH callback, for metrics.
+//! - [`install_ctx_status_callback`] + [`status_counters`]: a process-wide
+//!   accepted-handshakes counter fed by OpenSSL's ECH status callback, for
+//!   metrics. There is deliberately no rejected counter: server-side,
+//!   rejections are indistinguishable from GREASE by design (see the `status`
+//!   module docs).
 //!
 //! Requires OpenSSL >= 4.0; the build script refuses anything
 //! older. This crate is the one place in the vongola tree where
@@ -52,6 +55,6 @@ mod store;
 pub use error::Error;
 pub use status::{
     ConnectionStatus, EchStatus, StatusCounters, connection_status, install_ctx_status_callback,
-    retry_config, status_counters,
+    note_status, retry_config, status_counters,
 };
-pub use store::{ECH_RFC9849_VERSION, EchStore, EntryInfo, HpkeSuite};
+pub use store::{ECH_RFC9849_VERSION, EchStore, EntryInfo, HpkeSuite, MAX_PEM_BYTES};

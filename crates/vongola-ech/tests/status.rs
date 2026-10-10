@@ -22,8 +22,8 @@
 //! exact, deterministic ones).
 
 use vongola_ech::{
-    EchStatus, EchStore, HpkeSuite, connection_status, install_ctx_status_callback, retry_config,
-    status_counters,
+    ConnectionStatus, EchStatus, EchStore, HpkeSuite, connection_status,
+    install_ctx_status_callback, note_status, retry_config, status_counters,
 };
 
 /// A real server SSL_CTX from openssl-sys, freed on drop.
@@ -95,12 +95,53 @@ fn validation_callback_install_and_counters_readable() {
     let ctx = Ctx::new();
     // SAFETY: ctx.0 is a live SSL_CTX owned by this test.
     unsafe { install_ctx_status_callback(ctx.0) };
-    // No connections were served through this context, so the
-    // counters must not move; other tests in this process never
-    // complete a handshake either, so equality is the honest
-    // assertion (the live movement is proven end-to-end).
-    let after = status_counters();
-    assert_eq!(after, before);
+    // No connections were served through this context. The
+    // counters are process-global and sibling tests move
+    // them concurrently, so the honest assertion is
+    // monotonicity, not equality; the counting over real
+    // handshakes (and the callback's return-1 contract, which
+    // is fatal when wrong) is proven end-to-end by vongola's
+    // scripts/ech-proof.sh metrics assertions.
+    assert!(status_counters().accepted >= before.accepted);
+}
+
+#[test]
+fn adversarial_note_status_ignores_non_outcomes() {
+    // Nothing but an exact Success may move the counter —
+    // in particular Grease, because server-side a REJECTED
+    // attempt is folded into the GREASE state by design
+    // (see the status module docs): counting it as either
+    // accepted or rejected would be a lying metric.
+    let before = status_counters();
+    for status in [
+        EchStatus::Backend,
+        EchStatus::BadName,
+        EchStatus::Failed,
+        EchStatus::FailedEch,
+        EchStatus::FailedEchBadName,
+        EchStatus::Grease,
+        EchStatus::GreaseEch,
+        EchStatus::NotConfigured,
+        EchStatus::NotTried,
+    ] {
+        note_status(&ConnectionStatus {
+            inner_sni: None,
+            outer_sni: None,
+            status,
+        });
+    }
+    assert_eq!(status_counters(), before);
+}
+
+#[test]
+fn validation_note_status_counts_outcomes() {
+    let before = status_counters();
+    note_status(&ConnectionStatus {
+        inner_sni: None,
+        outer_sni: None,
+        status: EchStatus::Success,
+    });
+    assert_eq!(status_counters().accepted, before.accepted + 1);
 }
 
 #[test]

@@ -17,12 +17,30 @@
 // limitations under the License.
 // #################################################################
 
-//! Per-connection ECH outcome queries, plus process-wide
-//! accepted/rejected counters fed by OpenSSL's own ECH
-//! callback (`SSL_CTX_ech_set_callback`). The callback fires on
-//! the server as the ServerHello is constructed; following the
-//! API documentation, it branches on
-//! [`connection_status`] rather than parsing the log string.
+//! Per-connection ECH outcome queries, plus a process-wide
+//! accepted counter fed by OpenSSL's own ECH status
+//! callback ([`install_ctx_status_callback`]).
+//!
+//! What the server can observe, mapped out empirically
+//! against OpenSSL 4.0.3: the callback fires as the
+//! ServerHello is constructed, and an accepted attempt
+//! reports `Success` there. A REJECTED attempt, however, is
+//! not observable as such server-side — by design: when
+//! decryption of the inner ClientHello fails, OpenSSL
+//! folds the connection into the GREASE state
+//! (ssl/ech/ech_local.h: `OSSL_ECH_IS_GREASE` is set "when
+//! decryption failed or GREASE wanted"), so
+//! `SSL_ech_get1_status` reports `Grease` for genuine
+//! rejections and genuine GREASE alike. The `FailedEch*`
+//! codes are client-side only (they require the received
+//! retry-config state). Consequence for metrics: this
+//! crate counts ACCEPTED handshakes exactly, and does not
+//! offer a rejected counter — server-side, that number
+//! would be indistinguishable from GREASE noise and would
+//! be a lying metric. Rejection behavior is instead proven
+//! client-side (the peer receives authenticated
+//! retry-configs), which is where the protocol makes it
+//! visible.
 
 use std::os::raw::{c_char, c_int, c_uint};
 use std::ptr;
@@ -111,25 +129,32 @@ pub struct ConnectionStatus {
     pub status: EchStatus,
 }
 
-/// Snapshot of the process-wide ECH outcome counters fed by
-/// the callback installed with
-/// [`install_ctx_status_callback`].
+/// Snapshot of the process-wide ECH counters fed by
+/// [`note_status`]. There is deliberately no `rejected`
+/// field: server-side, rejections are indistinguishable
+/// from GREASE (see this module's header).
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct StatusCounters {
     pub accepted: u64,
-    pub rejected: u64,
 }
 
 static ACCEPTED: AtomicU64 = AtomicU64::new(0);
-static REJECTED: AtomicU64 = AtomicU64::new(0);
 
-/// Reads the current counter values. Counters only move once
-/// a status callback has been installed on a context that is
-/// serving connections.
+/// Records one connection's ECH outcome in the
+/// process-wide counters. Only `Success` (server-side,
+/// decidable exactly) moves the counter; every other
+/// status — including the `Grease` state that rejected
+/// attempts are folded into — moves nothing.
+pub fn note_status(status: &ConnectionStatus) {
+    if status.status == EchStatus::Success {
+        ACCEPTED.fetch_add(1, Ordering::Relaxed);
+    }
+}
+
+/// Reads the current counter values.
 pub fn status_counters() -> StatusCounters {
     StatusCounters {
         accepted: ACCEPTED.load(Ordering::Relaxed),
-        rejected: REJECTED.load(Ordering::Relaxed),
     }
 }
 
@@ -159,11 +184,12 @@ pub unsafe fn connection_status(ssl: *mut openssl_sys::SSL) -> ConnectionStatus 
 }
 
 /// Installs the crate's ECH outcome callback on an `SSL_CTX`:
-/// every completed ECH determination on connections from
-/// this context updates [`status_counters`] (accepted on
-/// success, rejected when an attempt failed and retry-configs
-/// were returned). Other outcomes (no attempt, GREASE) do not
-/// move the counters.
+/// OpenSSL invokes it as each connection's ServerHello is
+/// constructed, and it records the outcome in the
+/// process-wide counters via [`note_status`] (the outcome is
+/// classified by [`connection_status`], never by parsing the
+/// callback's log string — the API documentation forbids
+/// relying on that string).
 ///
 /// # Safety
 /// `ctx` must point at a live `SSL_CTX` that stays valid for
@@ -176,6 +202,26 @@ pub unsafe fn install_ctx_status_callback(ctx: *mut openssl_sys::SSL_CTX) {
     // handed and updates two atomics — it cannot panic and
     // frees everything it is given ownership of.
     unsafe { ffi::SSL_CTX_ech_set_callback(ctx, status_callback) }
+}
+
+/// OpenSSL's ECH outcome callback: classifies the connection
+/// via `SSL_ech_get1_status` (as the API documentation
+/// prescribes) and records it with [`note_status`].
+///
+/// RETURN CONTRACT (learned the hard way): the callback must
+/// return 1. OpenSSL treats any other value as a callback
+/// error and aborts the handshake with an internal-error
+/// alert at ServerHello construction — for EVERY connection
+/// the callback touches, including ones where ECH was only
+/// GREASEd. Returning 0 here killed classical handshakes
+/// during development until the bisect found it.
+extern "C" fn status_callback(ssl: *mut openssl_sys::SSL, _str: *const c_char) -> c_uint {
+    // SAFETY: OpenSSL invokes this callback with a live SSL
+    // during handshake processing; connection_status's contract
+    // is satisfied by that guarantee.
+    let status = unsafe { connection_status(ssl) };
+    note_status(&status);
+    1
 }
 
 /// The retry-configs a peer supplied for this connection
@@ -208,25 +254,4 @@ pub unsafe fn retry_config(ssl: *mut openssl_sys::SSL) -> Result<Vec<u8>, Error>
     // SAFETY: same allocation as above, freed exactly once.
     unsafe { ffi::openssl_free(ec as *mut std::os::raw::c_void) };
     Ok(bytes)
-}
-
-/// OpenSSL's ECH outcome callback: counts accepted/rejected
-/// outcomes. The log string is deliberately not parsed (the
-/// API documentation forbids relying on it); the outcome comes
-/// from `SSL_ech_get1_status`, as the documentation prescribes.
-extern "C" fn status_callback(ssl: *mut openssl_sys::SSL, _str: *const c_char) -> c_uint {
-    // SAFETY: OpenSSL invokes this callback with a live SSL
-    // during handshake processing; connection_status's contract
-    // is satisfied by that guarantee.
-    let status = unsafe { connection_status(ssl) };
-    match status.status {
-        EchStatus::Success => {
-            ACCEPTED.fetch_add(1, Ordering::Relaxed);
-        }
-        EchStatus::FailedEch | EchStatus::FailedEchBadName => {
-            REJECTED.fetch_add(1, Ordering::Relaxed);
-        }
-        _ => {}
-    }
-    0
 }
