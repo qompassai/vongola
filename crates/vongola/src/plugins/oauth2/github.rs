@@ -1,9 +1,27 @@
+// #################################################################
+// /qompassai/vongola/crates/vongola/src/plugins/oauth2/github.rs
+// Qompass AI Github
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::borrow::Cow;
 
 use anyhow::bail;
 use serde::Deserialize;
 
-use super::{provider::OauthUser, HTTP_CLIENT};
+use super::{HTTP_CLIENT, provider::OauthUser};
 
 /// Github `OAuth2` plugin
 pub(super) struct GithubOauthService;
@@ -19,12 +37,14 @@ impl GithubOauthService {
     /// The state parameter is used to prevent CSRF attacks
     /// and to ensure that the callback is coming from the correct source
     ///
-    /// user:email is the scope that is requested and you should update the app settings
-    /// to add the scope to the app
+    /// user:email is the scope that is requested and you should update the app
+    /// settings to add the scope to the app
     pub fn get_oauth_callback_url(client_id: &str, state: &str) -> String {
         let redirect_uri = "";
 
-        format!("{GITHUB_OAUTH_URL}?client_id={client_id}&redirect_uri={redirect_uri}&state={state}&scope=user:email&response_type=code")
+        format!(
+            "{GITHUB_OAUTH_URL}?client_id={client_id}&redirect_uri={redirect_uri}&state={state}&scope=user:email&response_type=code"
+        )
     }
 
     pub async fn get_oauth_user(

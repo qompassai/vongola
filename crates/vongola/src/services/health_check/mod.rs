@@ -1,3 +1,21 @@
+// #################################################################
+// /qompassai/vongola/crates/vongola/src/services/health_check/mod.rs
+// Qompass AI Health Check mod
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::time::Duration;
 
 use async_trait::async_trait;
@@ -14,9 +32,7 @@ use crate::stores::{self};
 pub struct HealthService {}
 
 impl HealthService {
-    pub fn new() -> Self {
-        Self {}
-    }
+    pub fn new() -> Self { Self {} }
 }
 
 async fn run_health_check_loop() {
@@ -52,11 +68,7 @@ impl Service for HealthService {
         run_health_check_loop().await;
     }
 
-    fn name(&self) -> &str {
-        "health_check_service"
-    }
+    fn name(&self) -> &str { "health_check_service" }
 
-    fn threads(&self) -> Option<usize> {
-        Some(1)
-    }
+    fn threads(&self) -> Option<usize> { Some(1) }
 }

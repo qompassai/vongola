@@ -1,16 +1,32 @@
+// #################################################################
+// /qompassai/vongola/crates/vongola/src/cache/disk/storage.rs
+// Qompass AI Storage
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::{any::Any, path::PathBuf};
 
 use async_trait::async_trait;
-
 use bytes::Buf;
 use once_cell::sync::Lazy;
+use pingora::Result;
 use pingora_cache::{
+    CacheKey, CacheMeta, HitHandler, MissHandler, PurgeType, Storage,
     key::{CacheHashKey, CompactCacheKey},
     trace::SpanHandle,
-    CacheKey, CacheMeta, HitHandler, MissHandler, PurgeType, Storage,
 };
-
-use pingora::Result;
 
 pub(super) static DISK_MEMORY_CACHE: Lazy<
     papaya::HashMap<String, (DiskCacheItemMetadata, bytes::Bytes)>,
@@ -36,7 +52,8 @@ impl DiskCache {
         }
     }
 
-    /// Retrieves the directory for the given key using the namespace as the base path
+    /// Retrieves the directory for the given key using the namespace as the
+    /// base path
     pub fn get_directory_for(&self, namespace: &str) -> PathBuf {
         // If there's no cache routing, use the default directory
         let Some(path) = stores::get_cache_routing_by_key(namespace) else {
@@ -54,9 +71,7 @@ impl DiskCache {
         serde_json::from_slice(&body).ok()
     }
 
-    fn get_memory_key(key: &CacheKey) -> String {
-        key.primary()
-    }
+    fn get_memory_key(key: &CacheKey) -> String { key.primary() }
 }
 
 #[async_trait]
@@ -66,9 +81,7 @@ impl Storage for DiskCache {
     /// Whether this storage backend supports reading partially written data
     ///
     /// This is to indicate when cache should unlock readers
-    fn support_streaming_partial_write(&self) -> bool {
-        false
-    }
+    fn support_streaming_partial_write(&self) -> bool { false }
 
     async fn lookup(
         &'static self,
@@ -127,7 +140,8 @@ impl Storage for DiskCache {
         )))
     }
 
-    /// Write the given [CacheMeta] to the storage. Return [MissHandler] to write the body later.
+    /// Write the given [CacheMeta] to the storage. Return [MissHandler] to
+    /// write the body later.
     async fn get_miss_handler(
         &'static self,
         key: &CacheKey,
@@ -162,7 +176,8 @@ impl Storage for DiskCache {
 
     /// Delete the cached asset for the given key
     ///
-    /// [CompactCacheKey] is used here because it is how eviction managers store the keys
+    /// [CompactCacheKey] is used here because it is how eviction managers store
+    /// the keys
     async fn purge(
         &'static self,
         key: &CompactCacheKey,
@@ -199,7 +214,5 @@ impl Storage for DiskCache {
     }
 
     /// Helper function to cast the trait object to concrete types
-    fn as_any(&self) -> &(dyn Any + Send + Sync + 'static) {
-        self
-    }
+    fn as_any(&self) -> &(dyn Any + Send + Sync + 'static) { self }
 }

@@ -1,25 +1,42 @@
+// #################################################################
 // /qompassai/vongola/crates/vongola/src/config/hcl.rs
-// Qompass AI Vongola HCL Config
-// Copyright (C) 2025 Qompass AI, All rights reserved
-/////////////////////////////////////////////////////
+// Qompass AI Hcl
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::{io::Read, path::Path};
+
 use hcl::{
-    eval::{Context, FuncArgs},
     Value,
+    eval::{Context, FuncArgs},
 };
 #[allow(clippy::module_name_repetitions)]
 pub struct HclFormat;
 impl figment::providers::Format for HclFormat {
     type Error = hcl::Error;
+
     const NAME: &'static str = "HCL";
+
     fn from_str<T: serde::de::DeserializeOwned>(string: &str) -> Result<T, Self::Error> {
         hcl::eval::from_str(string, &get_hcl_context())
     }
 }
 /// Function to retrieve the number of CPUs available on the system.
 /// Useful for setting the number of worker threads.
-/// Note that this function is not a part of the HCL specification, but a custom function.
-/// Example:
+/// Note that this function is not a part of the HCL specification, but a custom
+/// function. Example:
 /// ```hcl
 /// // HCL document
 /// worker_threads = num_cpus()
@@ -30,9 +47,9 @@ fn num_cpus(_: FuncArgs) -> Result<Value, String> {
     Ok(Value::Number(num_cpus.into()))
 }
 
-/// Function to read a file from a given path. Useful for reading configuration files.
-/// Note that this function is not a part of the HCL specification, but a custom function.
-/// Example:
+/// Function to read a file from a given path. Useful for reading configuration
+/// files. Note that this function is not a part of the HCL specification, but a
+/// custom function. Example:
 /// ```hcl
 /// // HCL document
 /// config = import("config.toml")
@@ -43,7 +60,7 @@ fn read_hcl_file(args: FuncArgs) -> Result<Value, String> {
 
     if !path
         .extension()
-        .map_or(false, |ext| ext.eq_ignore_ascii_case("hcl"))
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("hcl"))
     {
         return Err(format!(
             "File must be a HCL file: {}",
@@ -66,10 +83,10 @@ fn read_hcl_file(args: FuncArgs) -> Result<Value, String> {
     };
     Ok(value)
 }
-/// Function to retrieve an environment variable from a given HCL template. Useful for secrets.
-/// Note that this function is not a part of the HCL specification, but a custom function.
-/// Note that the environment variable name must be defined or an error will be returned.
-/// Example:
+/// Function to retrieve an environment variable from a given HCL template.
+/// Useful for secrets. Note that this function is not a part of the HCL
+/// specification, but a custom function. Note that the environment variable
+/// name must be defined or an error will be returned. Example:
 /// ```hcl
 /// // HCL document
 /// secret = env("JWT_SECRET")

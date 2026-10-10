@@ -1,3 +1,21 @@
+// #################################################################
+// /qompassai/vongola/crates/vongola/src/cache/disk/handlers.rs
+// Qompass AI Handlers
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::{
     any::Any,
     io::Read,
@@ -5,22 +23,18 @@ use std::{
 };
 
 use async_trait::async_trait;
-
+use pingora::Result;
 // use bytes::BufMut;
 use pingora_cache::{
+    CacheKey, Storage,
     key::CacheHashKey,
     storage::{HandleHit, HandleMiss},
     trace::SpanHandle,
-    CacheKey, Storage,
 };
-
-use pingora::Result;
-
 use tokio::{fs::OpenOptions, io::AsyncWriteExt};
 
-use crate::cache::disk::storage::DISK_MEMORY_CACHE;
-
 use super::meta::DiskCacheItemMetadata;
+use crate::cache::disk::storage::DISK_MEMORY_CACHE;
 
 pub struct DiskCacheHitHandler {
     target: std::io::BufReader<std::fs::File>,
@@ -80,11 +94,11 @@ impl HandleHit for DiskCacheHitHandler {
         _: &SpanHandle,
     ) -> Result<()> {
         // Skiping if the data is already in the cache
-        if let Some(existing) = DISK_MEMORY_CACHE.pin().get(&cache_key.primary()) {
-            if existing.1.len() == self.finished_buffer.len() {
-                tracing::debug!("skipping write, cache already contains data for {cache_key:?}");
-                return Ok(());
-            }
+        if let Some(existing) = DISK_MEMORY_CACHE.pin().get(&cache_key.primary())
+            && existing.1.len() == self.finished_buffer.len()
+        {
+            tracing::debug!("skipping write, cache already contains data for {cache_key:?}");
+            return Ok(());
         }
         tracing::debug!("writing to memory cache: {:?}", cache_key.primary());
 
@@ -98,21 +112,15 @@ impl HandleHit for DiskCacheHitHandler {
     }
 
     /// Whether this storage allow seeking to a certain range of body
-    fn can_seek(&self) -> bool {
-        false
-    }
+    fn can_seek(&self) -> bool { false }
 
     /// Try to seek to a certain range of the body
     /// For files this could become a blocking operation
     /// `end: None` means to read to the end of the body.
-    fn seek(&mut self, _start: usize, _end: Option<usize>) -> Result<()> {
-        Ok(())
-    }
+    fn seek(&mut self, _start: usize, _end: Option<usize>) -> Result<()> { Ok(()) }
 
     /// Helper function to cast the trait object to concrete types
-    fn as_any(&self) -> &(dyn Any + Send + Sync) {
-        self
-    }
+    fn as_any(&self) -> &(dyn Any + Send + Sync) { self }
 }
 
 /// MISS handler for the cache
@@ -178,8 +186,8 @@ impl HandleMiss for DiskCacheMissHandler {
 
     /// Finish the cache admission
     ///
-    /// When `self` is dropped without calling this function, the storage should consider this write
-    /// failed.
+    /// When `self` is dropped without calling this function, the storage should
+    /// consider this write failed.
     async fn finish(
         self: Box<Self>, // because self is always used as a trait object
     ) -> pingora::Result<usize> {
@@ -232,19 +240,13 @@ impl HandleHit for DiskCacheHitHandlerInMemory {
     }
 
     /// Whether this storage allow seeking to a certain range of body
-    fn can_seek(&self) -> bool {
-        false
-    }
+    fn can_seek(&self) -> bool { false }
 
     /// Try to seek to a certain range of the body
     /// For files this could become a blocking operation
     /// `end: None` means to read to the end of the body.
-    fn seek(&mut self, _start: usize, _end: Option<usize>) -> Result<()> {
-        Ok(())
-    }
+    fn seek(&mut self, _start: usize, _end: Option<usize>) -> Result<()> { Ok(()) }
 
     /// Helper function to cast the trait object to concrete types
-    fn as_any(&self) -> &(dyn Any + Send + Sync) {
-        self
-    }
+    fn as_any(&self) -> &(dyn Any + Send + Sync) { self }
 }

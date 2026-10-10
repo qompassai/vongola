@@ -1,7 +1,21 @@
-// /qompassai/vongola/crates/vongola/src/services/letsentrypt/http01.rs
-// Qompass AI Vongola Lets Encrypt Http-01 Service
-// # Copyright (C) 2025 Qompass AI, All rights reserved
-///////////////////////////////////////////////////////////////////////
+// #################################################################
+// /qompassai/vongola/crates/vongola/src/services/letsencrypt/http01.rs
+// Qompass AI Http01
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::{
     fs::create_dir_all,
     path::{self, PathBuf},
@@ -9,7 +23,7 @@ use std::{
     time::Duration,
 };
 
-use acme_v2::{order::NewOrder, persist::FilePersist, Account, DirectoryUrl};
+use acme_v2::{Account, DirectoryUrl, order::NewOrder, persist::FilePersist};
 use anyhow::anyhow;
 use async_trait::async_trait;
 use openssl::{pkey::PKey, x509::X509};
@@ -98,42 +112,18 @@ impl LetsencryptService {
             return Ok(());
         }
         tracing::info!("creating an in-memory self-signed certificate for {domain}");
-        let ec_group = openssl::ec::EcGroup::from_curve_name(openssl::nid::Nid::SECP384R1)?;
-        let ec_key = openssl::ec::EcKey::generate(&ec_group)?;
-        let key = openssl::pkey::PKey::from_ec_key(ec_key)?;
-        let mut openssl_cert = openssl::x509::X509Builder::new()?;
-        let mut x509_name = openssl::x509::X509NameBuilder::new()?;
-        x509_name.append_entry_by_text("CN", domain)?;
-        x509_name.append_entry_by_text("ST", "TX")?;
-        x509_name.append_entry_by_text("O", "Vongola")?;
-        let x509_name = x509_name.build();
-        let hash = openssl::hash::MessageDigest::sha256();
-        let one_year = openssl::asn1::Asn1Time::days_from_now(365)?;
-        let today = openssl::asn1::Asn1Time::days_from_now(0)?;
-        openssl_cert.set_version(2)?;
-        openssl_cert.set_subject_name(&x509_name)?;
-        openssl_cert.set_issuer_name(&x509_name)?;
-        openssl_cert.set_pubkey(&key)?;
-        openssl_cert.set_not_before(&today)?;
-        openssl_cert.set_not_after(&one_year)?;
-        openssl_cert.sign(&key, hash)?;
-        let openssl_cert = openssl_cert.build();
-        stores::insert_certificate(
-            domain.to_string(),
-            Certificate {
-                key,
-                leaf: openssl_cert,
-                chain: None,
-            },
-        );
+        let cert = stores::certificates::self_signed(domain)?;
+        stores::insert_certificate(domain.to_string(), cert);
         Ok(())
     }
-    fn get_lets_encrypt_url(&self) -> DirectoryUrl {
+
+    fn get_lets_encrypt_url(&self) -> DirectoryUrl<'_> {
         match self.config.lets_encrypt.staging {
             Some(false) => DirectoryUrl::LetsEncrypt,
             _ => DirectoryUrl::LetsEncryptStaging,
         }
     }
+
     /// Return the appropriate Let's Encrypt directories for certificates based
     /// on the environment
     fn get_lets_encrypt_directory(&self) -> PathBuf {
@@ -147,6 +137,7 @@ impl LetsencryptService {
         }
         path
     }
+
     /// Create a new order for a domain (HTTP-01 challenge)
     fn create_order_for_domain(
         domain: &str,
@@ -169,6 +160,7 @@ impl LetsencryptService {
         Self::insert_certificate(domain, cert.certificate(), cert.private_key())?;
         Ok(())
     }
+
     /// Watch for route changes and create or update certificates for new routes
     async fn watch_for_route_changes(&self, account: &Account<FilePersist>) {
         let mut interval = time::interval(Duration::from_secs(20));
@@ -183,6 +175,7 @@ impl LetsencryptService {
             }
         }
     }
+
     /// Check for certificates expiration and renew them if needed
     async fn check_for_certificates_expiration(&self, account: &Account<FilePersist>) {
         let mut interval = time::interval(Duration::from_secs(
@@ -210,6 +203,7 @@ impl LetsencryptService {
             interval.tick().await;
         }
     }
+
     fn handle_certificate_for_domain(
         domain: &str,
         account: &Account<FilePersist>,
@@ -226,10 +220,8 @@ impl LetsencryptService {
                     tracing::error!("failed to insert certificate for domain {domain}: {err}");
                 };
             }
-            Ok(None) => {
-                if Self::create_order_for_domain(domain, account).is_err() {
-                    Self::create_self_signed_certificate(domain, self_signed_on_failure).ok();
-                }
+            Ok(None) if Self::create_order_for_domain(domain, account).is_err() => {
+                Self::create_self_signed_certificate(domain, self_signed_on_failure).ok();
             }
             _ => {}
         }
@@ -249,7 +241,9 @@ impl Service for LetsencryptService {
             certificates_dir.to_string_lossy()
         );
         if create_dir_all(certificates_dir).is_err() {
-            tracing::error!("failed to create directory {certificates_dir:?}. Check permissions or make sure that the parent directory exists beforehand.");
+            tracing::error!(
+                "failed to create directory {certificates_dir:?}. Check permissions or make sure that the parent directory exists beforehand."
+            );
             return;
         }
         let persist = acme_v2::persist::FilePersist::new(certificates_dir);

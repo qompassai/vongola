@@ -1,13 +1,30 @@
+// #################################################################
+// /qompassai/vongola/crates/vongola/src/proxy_server/http_proxy.rs
+// Qompass AI Http Proxy
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use async_trait::async_trait;
 use http::{
+    StatusCode, Uri,
     header::{CONTENT_LENGTH, CONTENT_TYPE, LOCATION},
     uri::Scheme,
-    StatusCode, Uri,
 };
 use pingora::http::ResponseHeader;
-use pingora::upstreams::peer::HttpPeer;
-
 use pingora::proxy::{ProxyHttp, Session};
+use pingora::upstreams::peer::HttpPeer;
 use tracing::info;
 
 use crate::stores;
@@ -63,7 +80,7 @@ impl ProxyHttp for HttpLB {
             // Get the token and proof from the challenge store
             let (token, proof) = challenge_from_host;
             // Get the token from the URL
-            let token_from_url = current_uri.path().split('/').last().unwrap();
+            let token_from_url = current_uri.path().split('/').next_back().unwrap();
 
             // Token is not the same as the one provided
             if token != token_from_url {
@@ -111,7 +128,6 @@ impl ProxyHttp for HttpLB {
 
     /// In the case of port 80, we won't have an upstream to choose from.
     /// We will use request filters to handle LetsEncrypt/ZeroSSL challenges.
-    ///
     async fn upstream_peer(
         &self,
         _session: &mut Session,

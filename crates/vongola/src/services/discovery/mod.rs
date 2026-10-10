@@ -1,7 +1,21 @@
+// #################################################################
 // /qompassai/vongola/crates/vongola/src/services/discovery/mod.rs
-// Qompass AI Vongola Service Discovery Module
-// # Copyright (C) 2025 Qompass AI, All rights reserved
-/////////////////////////////////////////////////////////////////
+// Qompass AI Discovery mod
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::net::ToSocketAddrs;
 use std::{borrow::Cow, str::FromStr, sync::Arc, time::Duration};
 
@@ -9,19 +23,19 @@ use async_trait::async_trait;
 use http::{HeaderName, HeaderValue};
 use openssl::pkey::PKey;
 use openssl::x509::X509;
-use pingora::lb::{health_check::TcpHealthCheck, selection::RoundRobin, LoadBalancer};
+use pingora::lb::{LoadBalancer, health_check::TcpHealthCheck, selection::RoundRobin};
 use pingora::{
     server::{ListenFds, ShutdownWatch},
     services::Service,
 };
 use tokio::sync::broadcast::Sender;
 
-use crate::config::{Route, RouteCache, RouteUpstream};
 use crate::MsgRoute;
+use crate::config::{Route, RouteCache, RouteUpstream};
 use crate::{
+    MsgProxy,
     config::{Config, RouteHeader, RouteMatcher, RoutePathMatcher, RoutePlugin},
     stores::{self, routes::RouteStoreContainer},
-    MsgProxy,
 };
 pub struct RoutingService {
     config: Arc<Config>,
@@ -299,9 +313,12 @@ mod test {
     }
     #[test]
     fn test_domain_addr() {
-        let domain = "example.com:8080";
+        // Hermetic by design: localhost resolves through /etc/hosts,
+        // so this test needs no network (CI sandboxes included). It
+        // previously resolved example.com over live DNS.
+        let domain = "localhost:8080";
         println!("Testing pick_addr with domain `{}`", domain);
-        let addr = pick_addr(domain).expect("No address found for example.com");
+        let addr = pick_addr(domain).expect("No address found for localhost");
         println!("pick_addr result: {:?}", addr);
         assert_eq!(addr.port(), 8080, "Expected port 8080 for resolved address");
         match addr.ip() {

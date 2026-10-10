@@ -1,22 +1,37 @@
+// #################################################################
+// /qompassai/vongola/crates/vongola/src/plugins/basic_auth/mod.rs
+// Qompass AI Basic Auth mod
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::{borrow::Cow, collections::HashMap};
 
 use async_trait::async_trait;
-use http::{header, StatusCode};
+use http::{StatusCode, header};
 use openssl::base64;
 use pingora::{
     http::{RequestHeader, ResponseHeader},
     proxy::Session,
 };
 
-use crate::{config::RoutePlugin, proxy_server::https_proxy::RouterContext};
-
 use super::MiddlewarePlugin;
+use crate::{config::RoutePlugin, proxy_server::https_proxy::RouterContext};
 
 pub struct BasicAuth;
 impl BasicAuth {
-    pub fn new() -> Self {
-        Self {}
-    }
+    pub fn new() -> Self { Self {} }
 
     /// Returns a WWW-Authenticate header response indicating to downstream that
     /// This request requires basic auth
@@ -37,7 +52,8 @@ impl BasicAuth {
         Some((user, pass))
     }
 
-    /// Validates the 'Authorization' header against the configured 'user' and 'pass'
+    /// Validates the 'Authorization' header against the configured 'user' and
+    /// 'pass'
     fn validate_auth_header(auth_header: &str, user: &str, pass: &str) -> anyhow::Result<bool> {
         let encoded = auth_header.trim_start_matches("Basic ");
         let decoded = String::from_utf8(base64::decode_block(encoded)?)?;

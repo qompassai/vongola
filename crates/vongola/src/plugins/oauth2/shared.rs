@@ -1,10 +1,29 @@
-use itertools::Itertools;
+// #################################################################
+// /qompassai/vongola/crates/vongola/src/plugins/oauth2/shared.rs
+// Qompass AI Shared
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::{borrow::Cow, collections::HashMap};
+
+use itertools::Itertools;
 
 use super::provider::OauthUser;
 
 /// Parses an HTTP str (from `http::Uri`) to a Hashmap of query parameters
-pub(super) fn from_string_to_query_params(value: &str) -> HashMap<Cow<str>, Cow<str>> {
+pub(super) fn from_string_to_query_params(value: &str) -> HashMap<Cow<'_, str>, Cow<'_, str>> {
     value
         .split('&')
         .filter_map(|kv| {
@@ -58,7 +77,8 @@ pub(super) fn validate_user_from_provider(
                     .any(|v| user.team_ids.contains(&(**v).to_string()));
             }
             "org_id" => {
-                // Check if the user's organization is in the list of allowed organizations
+                // Check if the user's organization is in the list of allowed
+                // organizations
                 return validation_values
                     .iter()
                     .any(|v| user.organization_ids.contains(&(**v).to_string()));
@@ -68,7 +88,8 @@ pub(super) fn validate_user_from_provider(
                 return validation_values.iter().contains(&&user.email[..]);
             }
             "username" => {
-                // Check if the user's username is in the list of allowed usernames
+                // Check if the user's username is in the list of allowed
+                // usernames
                 return validation_values
                     .iter()
                     .any(|v| user.usernames.contains(&(*v).to_string()));
@@ -82,8 +103,9 @@ pub(super) fn validate_user_from_provider(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use serde_json::json;
+
+    use super::*;
 
     #[test]
     fn test_query_params_to_map() {

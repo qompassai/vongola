@@ -1,3 +1,21 @@
+// #################################################################
+// /qompassai/vongola/crates/vongola/src/services/docker/mod.rs
+// Qompass AI Docker mod
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::{
     borrow::Cow, collections::HashMap, hash::Hash, net::SocketAddr, str::FromStr, sync::Arc,
     time::Duration,
@@ -6,7 +24,7 @@ use std::{
 use anyhow::anyhow;
 use async_trait::async_trait;
 use bollard::{
-    container::ListContainersOptions, service::ListServicesOptions, Docker, API_DEFAULT_VERSION,
+    API_DEFAULT_VERSION, Docker, container::ListContainersOptions, service::ListServicesOptions,
 };
 use pingora::{
     server::{ListenFds, ShutdownWatch},
@@ -17,8 +35,8 @@ use tokio::sync::broadcast::Sender;
 use tracing::{debug, info};
 
 use crate::{
-    config::{Config, DockerServiceMode, RouteHeaderAdd, RouteHeaderRemove, RoutePlugin},
     MsgProxy, MsgRoute,
+    config::{Config, DockerServiceMode, RouteHeaderAdd, RouteHeaderRemove, RoutePlugin},
 };
 
 /// Based on the provided endpoint, returns the correct Docker client
@@ -143,7 +161,8 @@ impl LabelService {
             for (k, v) in service_labels {
                 if k.starts_with("vongola.") {
                     // direct values
-                    // TODO refactor to be reused for both services and containers
+                    // TODO refactor to be reused for both services and
+                    // containers
                     match k.as_str() {
                         "vongola.enabled" => proxy_enabled = v == "true",
                         "vongola.host" => proxy_host = v,
@@ -205,8 +224,8 @@ impl LabelService {
                 continue;
             }
 
-            // TODO offer an option to load balance directly to the container IPs
-            // of the service instead of through the docker dns
+            // TODO offer an option to load balance directly to the container
+            // IPs of the service instead of through the docker dns
             if !host_map.contains_key(proxy_host) {
                 let mut routed = VongolaDockerRoute::default();
                 routed
@@ -237,10 +256,12 @@ impl LabelService {
                     });
                 }
 
-                if basic_auth_user.is_some() && basic_auth_password.is_some() {
+                if let (Some(auth_user), Some(auth_password)) =
+                    (basic_auth_user, basic_auth_password)
+                {
                     let mut map = HashMap::new();
-                    map.insert(Cow::Borrowed("user"), json!(basic_auth_user.unwrap()));
-                    map.insert(Cow::Borrowed("pass"), json!(basic_auth_password.unwrap()));
+                    map.insert(Cow::Borrowed("user"), json!(auth_user));
+                    map.insert(Cow::Borrowed("pass"), json!(auth_password));
 
                     plugins.push(RoutePlugin {
                         name: Cow::Borrowed("basic_auth"),
@@ -365,9 +386,12 @@ impl LabelService {
 
                 let socket_addr = SocketAddr::from_str(&ip_plus_port);
 
-                // skip values from networks that Vongola does not have access to
+                // skip values from networks that Vongola does not have access
+                // to
                 if ip_on_network.is_empty() || socket_addr.is_err() {
-                    debug!("Could not parse the ip address {ip_plus_port} of the container {container_names:?}");
+                    debug!(
+                        "Could not parse the ip address {ip_plus_port} of the container {container_names:?}"
+                    );
                     continue;
                 }
 

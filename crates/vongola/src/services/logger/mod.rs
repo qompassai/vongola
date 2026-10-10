@@ -1,9 +1,27 @@
+// #################################################################
+// /qompassai/vongola/crates/vongola/src/services/logger/mod.rs
+// Qompass AI Logger mod
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::{
     io,
     pin::Pin,
     sync::{
-        atomic::{AtomicI64, Ordering},
         Arc,
+        atomic::{AtomicI64, AtomicU64, Ordering},
     },
     task::{Context, Poll},
 };
@@ -16,7 +34,7 @@ use pingora::{
 use rotation::Rotation;
 use tokio::{
     io::AsyncWriteExt,
-    sync::mpsc::{UnboundedReceiver, UnboundedSender},
+    sync::mpsc::{Receiver, Sender},
 };
 use tracing_subscriber::fmt::MakeWriter;
 
@@ -24,17 +42,34 @@ use crate::config::{Config, LogRotation};
 
 mod rotation;
 
+/// Maximum number of formatted log lines buffered between the request
+/// path and the background log writer. One entry is one formatted line
+/// (typically well under 1 KiB), so the queue stays within a few MiB.
+/// When the queue is full the writer drops lines — counted in
+/// [`DROPPED_LOG_LINES`] — rather than blocking request handling on
+/// logging or growing memory without bound.
+pub const LOG_CHANNEL_CAPACITY: usize = 1024;
+
+/// Number of log lines dropped because the log channel was full.
+pub static DROPPED_LOG_LINES: AtomicU64 = AtomicU64::new(0);
+
 /// A `io::Write` implementation that sends logs to a background service
 #[derive(Debug, Clone)]
 pub struct StdoutWriter<'a> {
-    chan: &'a UnboundedSender<Vec<u8>>,
+    chan: &'a Sender<Vec<u8>>,
     skip_log: bool,
 }
 
 impl io::Write for StdoutWriter<'_> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         if !self.skip_log {
-            self.chan.send(buf.to_vec()).ok();
+            match self.chan.try_send(buf.to_vec()) {
+                Ok(()) => {}
+                Err(tokio::sync::mpsc::error::TrySendError::Full(_)) => {
+                    DROPPED_LOG_LINES.fetch_add(1, Ordering::Relaxed);
+                }
+                Err(tokio::sync::mpsc::error::TrySendError::Closed(_)) => {}
+            }
         }
         Ok(buf.len())
     }
@@ -53,7 +88,7 @@ impl io::Write for StdoutWriter<'_> {
 #[derive(Debug)]
 pub struct ProxyLog {
     enabled: bool,
-    chan: UnboundedSender<Vec<u8>>,
+    chan: Sender<Vec<u8>>,
     access_logs: bool,
     error_logs: bool,
 }
@@ -61,7 +96,7 @@ pub struct ProxyLog {
 impl ProxyLog {
     #[allow(clippy::fn_params_excessive_bools)]
     pub fn new(
-        sender: UnboundedSender<Vec<u8>>,
+        sender: Sender<Vec<u8>>,
         log_enabled: bool,
         access_logs: bool,
         error_logs: bool,
@@ -142,7 +177,7 @@ impl tokio::io::AsyncWrite for LogWriter {
 /// A background service that receives logs from the main thread and writes them
 /// to stdout
 pub struct ProxyLoggerReceiver {
-    receiver: UnboundedReceiver<Vec<u8>>,
+    receiver: Receiver<Vec<u8>>,
     config: Arc<Config>,
     bufwriter: tokio::io::BufWriter<LogWriter>,
     suffix: String,
@@ -156,7 +191,7 @@ pub struct Inner {
 }
 
 impl ProxyLoggerReceiver {
-    pub fn new(receiver: UnboundedReceiver<Vec<u8>>, config: Arc<Config>) -> Self {
+    pub fn new(receiver: Receiver<Vec<u8>>, config: Arc<Config>) -> Self {
         ProxyLoggerReceiver {
             receiver,
             config,

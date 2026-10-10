@@ -1,9 +1,24 @@
+// #################################################################
 // /qompassai/vongola/crates/vongola/src/plugins/mod.rs
-// # Qompass AI Vongola Plugins Module
-// Copyright (C) 2025 Qompass AI, All rights reserved
-/////////////////////////////////////////////////////
+// Qompass AI Plugins mod
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::{borrow::Cow, collections::HashMap};
-use anyhow::{anyhow, Result};
+
+use anyhow::{Result, anyhow};
 use async_trait::async_trait;
 use basic_auth::BasicAuth;
 use oauth2::Oauth2;
@@ -11,6 +26,7 @@ use once_cell::sync::Lazy;
 use pingora::http::{RequestHeader, ResponseHeader};
 use pingora::proxy::Session;
 use request_id::RequestId;
+
 use crate::{config::RoutePlugin, proxy_server::https_proxy::RouterContext};
 pub mod basic_auth;
 pub mod jwt;
@@ -21,7 +37,8 @@ pub(crate) struct ProxyPlugins {
     pub oauth2: Lazy<Oauth2>,
     pub request_id: Lazy<RequestId>,
 }
-/// Static plugin registry (plugins that don't generate a new instance for each request)
+/// Static plugin registry (plugins that don't generate a new instance for each
+/// request)
 pub static PLUGINS: Lazy<ProxyPlugins> = Lazy::new(|| ProxyPlugins {
     basic_auth: Lazy::new(BasicAuth::new),
     oauth2: Lazy::new(Oauth2::new),
@@ -42,8 +59,8 @@ fn get_required_config(
 pub trait MiddlewarePlugin {
     /// Create a new state for the middleware
     /// Filter requests based on the middleware's logic
-    /// Return false if the request should be allowed to pass through and was not handled
-    /// Return true if the request was already handled
+    /// Return false if the request should be allowed to pass through and was
+    /// not handled Return true if the request was already handled
     async fn request_filter(
         &self,
         session: &mut Session,
@@ -61,8 +78,8 @@ pub trait MiddlewarePlugin {
         state: &mut RouterContext,
     ) -> Result<()>;
     /// Filter responses (from upstream) based on the middleware's logic
-    /// Return false if the request should be allowed to pass through and was not handled
-    /// Return true if the request was already handled
+    /// Return false if the request should be allowed to pass through and was
+    /// not handled Return true if the request was already handled
     async fn response_filter(
         &self,
         session: &mut Session,

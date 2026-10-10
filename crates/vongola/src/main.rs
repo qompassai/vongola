@@ -1,19 +1,34 @@
+// #################################################################
 // /qompassai/vongola/crates/vongola/src/main.rs
-// Qompass AI Vongola Main 
-// Copyright (C) 2025 Qompass AI, All rights reserved
-/////////////////////////////////////////////////////
+// Qompass AI Vongola Reverse Proxy Entry Point
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::{borrow::Cow, sync::Arc};
+
 use ::pingora::server::Server;
+use bytes::Bytes;
+use clap::crate_version;
+use config::{LogFormat, RouteHeaderAdd, RouteHeaderRemove, RoutePlugin, load};
+use openssl::ssl::SslSessionCacheMode;
 #[allow(unused_imports)]
 use pingora::services::Service as ServiceTrait;
 use pingora::services::listening::Service as ListeningService;
-use bytes::Bytes;
-use openssl::ssl::SslSessionCacheMode;
-use clap::crate_version;
-use config::{load, LogFormat, RouteHeaderAdd, RouteHeaderRemove, RoutePlugin};
 use pingora::{listeners::tls::TlsSettings, proxy::http_proxy_service, server::configuration::Opt};
 use proxy_server::cert_store::CertStore;
-use services::{logger::ProxyLoggerReceiver, BackgroundFunctionService};
+use services::{BackgroundFunctionService, logger::ProxyLoggerReceiver};
 use tracing_subscriber::EnvFilter;
 mod cache;
 mod channel;
@@ -58,7 +73,8 @@ pub enum MsgProxy {
 fn main() -> Result<(), anyhow::Error> {
     let proxy_config =
         Arc::new(load("/etc/vongola/configs").expect("Failed to load configuration: "));
-    let (log_sender, log_receiver) = tokio::sync::mpsc::unbounded_channel::<Vec<u8>>();
+    let (log_sender, log_receiver) =
+        tokio::sync::mpsc::channel::<Vec<u8>>(services::logger::LOG_CHANNEL_CAPACITY);
     let (sender, mut _receiver) = tokio::sync::broadcast::channel::<MsgProxy>(10);
     // let (appender, _guard) = get_non_blocking_writer(&proxy_config);
     let appender = services::logger::ProxyLog::new(
@@ -105,8 +121,8 @@ fn main() -> Result<(), anyhow::Error> {
     tls_settings.set_session_cache_mode(SslSessionCacheMode::SERVER);
     tls_settings.set_servername_callback(move |ssl_ref, _| CertStore::sni_callback(ssl_ref));
     https_secure_service.add_tls_with_settings("[::]:4433", None, tls_settings);
-     let mut prometheus_service_http = ListeningService::prometheus_http_service();
-     prometheus_service_http.add_tcp("[::]:9090");
+    let mut prometheus_service_http = ListeningService::prometheus_http_service();
+    prometheus_service_http.add_tcp("[::]:9090");
     pingora_server.add_service(prometheus_service_http);
     pingora_server.add_service(BackgroundFunctionService::new(proxy_config.clone(), sender));
     pingora_server.add_service(ProxyLoggerReceiver::new(log_receiver, proxy_config.clone()));

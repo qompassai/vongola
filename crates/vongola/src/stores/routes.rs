@@ -1,8 +1,26 @@
+// #################################################################
+// /qompassai/vongola/crates/vongola/src/stores/routes.rs
+// Qompass AI Routes
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::{borrow::Cow, collections::HashMap, sync::Arc};
 
 use http::{HeaderName, HeaderValue};
 use path_tree::PathTree;
-use pingora::lb::{selection::RoundRobin, LoadBalancer};
+use pingora::lb::{LoadBalancer, selection::RoundRobin};
 
 use crate::config::{RouteCache, RoutePlugin, RouteUpstream};
 
@@ -12,9 +30,7 @@ pub struct RouteStorePathMatcher {
 }
 
 impl RouteStorePathMatcher {
-    pub fn new() -> Self {
-        RouteStorePathMatcher::default()
-    }
+    pub fn new() -> Self { RouteStorePathMatcher::default() }
 
     // From a given list of patterns, generate a tree structure
     // to match against incoming requests
@@ -85,7 +101,6 @@ impl RouteStoreContainer {
 pub type RouteStore = papaya::HashMap<String, RouteStoreContainer>;
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

@@ -1,36 +1,49 @@
+// #################################################################
+// /qompassai/vongola/crates/vongola/src/proxy_server/https_proxy.rs
+// Qompass AI Https Proxy
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::net::ToSocketAddrs;
 use std::str::FromStr;
 use std::time::{Duration, SystemTime};
 use std::{borrow::Cow, collections::HashMap};
 
 use async_trait::async_trait;
-
 use http::uri::PathAndQuery;
 use http::{HeaderName, HeaderValue, Uri};
 use once_cell::sync::Lazy;
-
 use openssl::base64;
 use pingora::http::{RequestHeader, ResponseHeader};
 use pingora::protocols::Digest;
 use pingora::proxy::{ProxyHttp, Session};
 use pingora::upstreams::peer::Peer;
-use pingora::{upstreams::peer::HttpPeer, ErrorType::HTTPStatus};
-
+use pingora::{ErrorType::HTTPStatus, upstreams::peer::HttpPeer};
 use pingora_cache::lock::CacheLock;
-
 use pingora_cache::{CacheKey, CacheMeta, NoCacheReason, RespCacheable};
 
-use crate::cache::disk::storage::DiskCache;
-use crate::config::{RouteCacheType, RouteUpstream};
-use crate::stores::{self, routes::RouteStoreContainer};
-
 use super::{
+    DEFAULT_PEER_OPTIONS,
     middleware::{
         execute_request_plugins, execute_response_plugins, execute_upstream_request_plugins,
         execute_upstream_response_plugins,
     },
-    DEFAULT_PEER_OPTIONS,
 };
+use crate::cache::disk::storage::DiskCache;
+use crate::config::{RouteCacheType, RouteUpstream};
+use crate::stores::{self, routes::RouteStoreContainer};
 
 static STORAGE_MEM_CACHE: Lazy<pingora_cache::MemCache> = Lazy::new(pingora_cache::MemCache::new);
 static STORAGE_CACHE: Lazy<DiskCache> = Lazy::new(DiskCache::new);
@@ -86,9 +99,10 @@ impl ProxyHttp for Router {
         }
     }
 
-    // Define the filter that will be executed before the request is sent to the upstream.
-    // If the filter returns `true`, the request has already been handled.
-    // If the filter returns `false`, the request will be sent to the upstream.
+    // Define the filter that will be executed before the request is sent to the
+    // upstream. If the filter returns `true`, the request has already been
+    // handled. If the filter returns `false`, the request will be sent to
+    // the upstream.
     async fn request_filter(
         &self,
         session: &mut Session,
@@ -124,20 +138,19 @@ impl ProxyHttp for Router {
             return Ok(true);
         }
 
-        if route_container.cache.is_some() {
-            let cache = route_container.cache.as_ref().unwrap();
-            if cache.enabled.unwrap_or(false) {
-                let storage = get_cache_storage(&cache.cache_type);
+        if let Some(cache) = route_container.cache.as_ref()
+            && cache.enabled.unwrap_or(false)
+        {
+            let storage = get_cache_storage(&cache.cache_type);
 
-                stores::insert_cache_routing(
-                    &ctx.host,
-                    cache.path.to_string_lossy().to_string(),
-                    false,
-                );
-                session
-                    .cache
-                    .enable(storage, None, None, Some(&*CACHE_LOCK));
-            }
+            stores::insert_cache_routing(
+                &ctx.host,
+                cache.path.to_string_lossy().to_string(),
+                false,
+            );
+            session
+                .cache
+                .enable(storage, None, None, Some(&*CACHE_LOCK));
         }
 
         ctx.route_container = route_container.clone();
@@ -194,8 +207,8 @@ impl ProxyHttp for Router {
 
     /// Modify the response header before it is send to the downstream
     ///
-    /// The modification is after caching. This filter is called for all responses including
-    /// responses served from cache.
+    /// The modification is after caching. This filter is called for all
+    /// responses including responses served from cache.
     async fn response_filter(
         &self,
         session: &mut Session,
@@ -215,8 +228,9 @@ impl ProxyHttp for Router {
         }
 
         let cache_state = ctx.extensions.get("cache_state").cloned();
-        if session.cache.enabled() && cache_state.is_some() {
-            let cache_state = cache_state.unwrap();
+        if session.cache.enabled()
+            && let Some(cache_state) = cache_state
+        {
             // indicates whether it was HIT or MISS in the cache
             upstream_response.insert_header(
                 HeaderName::from_str("cache-status").unwrap(),
@@ -238,8 +252,8 @@ impl ProxyHttp for Router {
 
     /// Modify the request before it is sent to the upstream
     ///
-    /// Unlike [Self::request_filter()], this filter allows to change the request headers to send
-    /// to the upstream.
+    /// Unlike [Self::request_filter()], this filter allows to change the
+    /// request headers to send to the upstream.
     async fn upstream_request_filter(
         &self,
         session: &mut Session,
@@ -252,13 +266,13 @@ impl ProxyHttp for Router {
         let upstream = &ctx.upstream;
 
         // TODO: refactor
-        if let Some(headers) = upstream.headers.as_ref() {
-            if let Some(add) = headers.add.as_ref() {
-                for header_add in add {
-                    upstream_request
-                        .insert_header(header_add.name.to_string(), header_add.value.to_string())
-                        .ok();
-                }
+        if let Some(headers) = upstream.headers.as_ref()
+            && let Some(add) = headers.add.as_ref()
+        {
+            for header_add in add {
+                upstream_request
+                    .insert_header(header_add.name.to_string(), header_add.value.to_string())
+                    .ok();
             }
         }
 
@@ -271,11 +285,13 @@ impl ProxyHttp for Router {
 
     /// Modify the response header from the upstream
     ///
-    /// The modification is before caching, so any change here will be stored in the cache if enabled.
+    /// The modification is before caching, so any change here will be stored in
+    /// the cache if enabled.
     ///
-    /// Responses served from cache won't trigger this filter. If the cache needed revalidation,
-    /// only the 304 from upstream will trigger the filter (though it will be merged into the
-    /// cached header, not served directly to downstream).
+    /// Responses served from cache won't trigger this filter. If the cache
+    /// needed revalidation, only the 304 from upstream will trigger the
+    /// filter (though it will be merged into the cached header, not served
+    /// directly to downstream).
     fn upstream_response_filter(
         &self,
         session: &mut Session,
@@ -290,11 +306,11 @@ impl ProxyHttp for Router {
         //
     }
 
-    /// This filter is called when the entire response is sent to the downstream successfully or
-    /// there is a fatal error that terminate the request.
+    /// This filter is called when the entire response is sent to the downstream
+    /// successfully or there is a fatal error that terminate the request.
     ///
-    /// An error log is already emitted if there is any error. This phase is used for collecting
-    /// metrics and sending access logs.
+    /// An error log is already emitted if there is any error. This phase is
+    /// used for collecting metrics and sending access logs.
     async fn logging(
         &self,
         session: &mut Session,
@@ -358,7 +374,8 @@ impl ProxyHttp for Router {
     ///
     /// This callback is called only when cache is enabled for this request
     ///
-    /// By default this callback returns a default cache key generated from the request.
+    /// By default this callback returns a default cache key generated from the
+    /// request.
     fn cache_key_callback(
         &self,
         session: &Session,
@@ -379,18 +396,20 @@ impl ProxyHttp for Router {
         ))
     }
 
-    /// This callback is invoked when a cacheable response is ready to be admitted to cache
+    /// This callback is invoked when a cacheable response is ready to be
+    /// admitted to cache
     fn cache_miss(&self, session: &mut Session, ctx: &mut Self::CTX) {
         ctx.extensions
             .insert(Cow::Borrowed("cache_state"), "fwd=miss".into());
         session.cache.cache_miss();
     }
 
-    /// This filter is called after a successful cache lookup and before the cache asset is ready to
-    /// be used.
+    /// This filter is called after a successful cache lookup and before the
+    /// cache asset is ready to be used.
     ///
     /// This filter allow the user to log or force expire the asset.
-    // flex purge, other filtering, returns whether asset is should be force expired or not
+    // flex purge, other filtering, returns whether asset is should be force
+    // expired or not
     async fn cache_hit_filter(
         &self,
         _session: &Session,
@@ -438,7 +457,8 @@ impl ProxyHttp for Router {
         )))
     }
 
-    /// This filter is called when the request just established or reused a connection to the upstream
+    /// This filter is called when the request just established or reused a
+    /// connection to the upstream
     ///
     /// This filter allows user to log timing and connection related info.
     async fn connected_to_upstream(
@@ -461,9 +481,7 @@ impl ProxyHttp for Router {
     }
 }
 
-fn get_uri(session: &mut Session) -> Uri {
-    session.req_header().uri.clone()
-}
+fn get_uri(session: &mut Session) -> Uri { session.req_header().uri.clone() }
 
 /// Retrieves the host from the request headers based on
 /// whether the request is HTTP/1.1 or HTTP/2

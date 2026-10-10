@@ -1,12 +1,27 @@
-// /qompassai/vongola/crates/vongola/src/config/hcl.rs
-// Qompass AI Vongola Config Module
-// Copyright (C) 2025 Qompass AI, All rights reserved
-/////////////////////////////////////////////////////
+// #################################################################
+// /qompassai/vongola/crates/vongola/src/config/mod.rs
+// Qompass AI Config mod
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::{borrow::Cow, collections::HashMap, path::PathBuf};
+
 use clap::{Args, Parser, ValueEnum};
 use figment::{
-    providers::{Env, Format, Serialized, Yaml},
     Figment, Provider,
+    providers::{Env, Format, Serialized, Yaml},
 };
 use hcl::Hcl;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -41,8 +56,8 @@ pub struct Docker {
     )]
     pub interval_secs: Option<u64>,
 
-    /// The rootless docker endpoint to connect to (can be a unix socket or a tcp
-    /// address)
+    /// The rootless docker endpoint to connect to (can be a unix socket or a
+    /// tcp address)
     #[arg(
         long = "docker.endpoint",
         required = false,
@@ -153,7 +168,7 @@ pub struct RouteUpstream {
 impl Default for RouteUpstream {
     fn default() -> Self {
         RouteUpstream {
-            ip: Cow::Borrowed("[::1]"), 
+            ip: Cow::Borrowed("[::1]"),
             port: 8080,
             network: None,
             weight: None,
@@ -568,6 +583,9 @@ impl Provider for Config {
 /// Nested keys can be separated by double underscores (__) in the environment
 /// variables. E.g. VONGOLA__LOGGING__LEVEL=DEBUG` will set the `level` key in
 /// the `logging` key in the `vongola` key.
+// figment::Error is 208+ bytes by upstream design; boxing it would
+// churn every caller of this cold startup path for no runtime gain.
+#[allow(clippy::result_large_err)]
 pub fn load(fallback: &str) -> Result<Config, figment::Error> {
     let parsed_commands = Config::parse();
 
@@ -672,6 +690,9 @@ where D: Deserializer<'de> {
 
 #[cfg(test)]
 mod tests {
+    // The figment::Jail closures below must return figment::Error
+    // (208+ bytes, upstream type) -- the signature is not ours to box.
+    #![allow(clippy::result_large_err)]
     use serde_json::json;
 
     use super::*;

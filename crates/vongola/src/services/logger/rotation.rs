@@ -1,3 +1,21 @@
+// #################################################################
+// /qompassai/vongola/crates/vongola/src/services/logger/rotation.rs
+// Qompass AI Rotation
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use time::Duration;
 
 use crate::config::LogRotation;
@@ -6,12 +24,12 @@ use crate::config::LogRotation;
 pub struct Rotation(pub LogRotation);
 
 impl Rotation {
-    /// Provides a minutely rotation
-    pub const MINUTELY: Self = Self(LogRotation::Minutely);
-    /// Provides an hourly rotation
-    pub const HOURLY: Self = Self(LogRotation::Hourly);
     /// Provides a daily rotation
     pub const DAILY: Self = Self(LogRotation::Daily);
+    /// Provides an hourly rotation
+    pub const HOURLY: Self = Self(LogRotation::Hourly);
+    /// Provides a minutely rotation
+    pub const MINUTELY: Self = Self(LogRotation::Minutely);
     /// Provides a rotation that never rotates.
     pub const NEVER: Self = Self(LogRotation::Never);
 

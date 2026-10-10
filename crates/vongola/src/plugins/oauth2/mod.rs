@@ -1,19 +1,35 @@
+// #################################################################
+// /qompassai/vongola/crates/vongola/src/plugins/oauth2/mod.rs
+// Qompass AI Oauth2 mod
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Qompass AI
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::time::SystemTime;
 use std::{borrow::Cow, collections::HashMap};
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use async_trait::async_trait;
 use cookie::Cookie;
 use http::StatusCode;
 use once_cell::sync::Lazy;
 use pingora::http::{RequestHeader, ResponseHeader};
 use pingora::proxy::Session;
-
 use provider::{OauthType, OauthUser, Provider};
 
+use super::{MiddlewarePlugin, get_required_config, jwt};
 use crate::{config::RoutePlugin, proxy_server::https_proxy::RouterContext};
-
-use super::{get_required_config, jwt, MiddlewarePlugin};
 
 // New providers can be added here
 mod github;
@@ -27,22 +43,22 @@ mod shared;
 /// Lazy loaded to avoid creating a new client for each request.
 static HTTP_CLIENT: Lazy<reqwest::Client> = Lazy::new(reqwest::Client::new);
 
-// Shared state for Oauth2 flows (should be cleaned up after fetching for the first time)
-// TODO find a way to clean up/expire the state
+// Shared state for Oauth2 flows (should be cleaned up after fetching for the
+// first time) TODO find a way to clean up/expire the state
 const COOKIE_NAME: &str = "__Secure_Auth_PRK_JWT";
 
 fn get_current_timestamp() -> u64 {
     SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap()
-        .as_secs()
+        .map(|duration| duration.as_secs())
+        .unwrap_or(0)
 }
 
 /// The Oauth2 plugin
-/// This plugin is responsible for handling Oauth authentication and authorization
-/// It can be used to authenticate users against various Oauth providers
-/// and authorize them to access specific resources or perform certain actions
-/// based on their authorization level.
+/// This plugin is responsible for handling Oauth authentication and
+/// authorization It can be used to authenticate users against various Oauth
+/// providers and authorize them to access specific resources or perform certain
+/// actions based on their authorization level.
 pub struct Oauth2 {
     short_crypt: short_crypt::ShortCrypt,
 }
@@ -79,7 +95,8 @@ impl Oauth2 {
         // Removes any cookie to prevent the user from being redirected
         // to the Oauth provider over and over
         // let removed_cookie = remove_secure_cookie(host);
-        // res_headers.append_header(http::header::SET_COOKIE, removed_cookie.to_string())?;
+        // res_headers.append_header(http::header::SET_COOKIE,
+        // removed_cookie.to_string())?;
 
         res_headers.append_header(
             http::header::LOCATION,
@@ -100,7 +117,8 @@ impl Oauth2 {
         Ok(true)
     }
 
-    /// Ends the Oauth2 flow and returns HTTP unauthorized if errors occur during the Oauth process
+    /// Ends the Oauth2 flow and returns HTTP unauthorized if errors occur
+    /// during the Oauth process
     async fn unauthorized_response(&self, session: &mut Session) -> Result<bool> {
         let res_headers = ResponseHeader::build_no_case(StatusCode::UNAUTHORIZED, Some(1))?;
 
@@ -193,8 +211,8 @@ impl MiddlewarePlugin for Oauth2 {
     }
 
     /// Oauth2 filters requests with/without the required Secure Cookie
-    /// If the request has the required cookie, the request is allowed to pass through
-    /// and we perform a JWT validation
+    /// If the request has the required cookie, the request is allowed to pass
+    /// through and we perform a JWT validation
     /// If the request does not have the required cookie, the request is blocked
     /// and we return a redirect to the oauth login flow (HTTP 307)
     async fn request_filter(
@@ -218,7 +236,7 @@ impl MiddlewarePlugin for Oauth2 {
         let validations = plugin_config.get("validations");
 
         // Callback path based on the selected provider
-        let callback_path = format!("/__/oauth/{}/callback", &provider);
+        let callback_path = format!("/__/oauth/{}/callback", provider);
 
         // Create provider service
         let oauth_provider = Provider {
@@ -258,11 +276,18 @@ impl MiddlewarePlugin for Oauth2 {
                 return self.unauthorized_response(session).await;
             };
 
-            let (timestamp, current_address) = redirect_from_state.split_once(';').unwrap();
-            let timestamp = timestamp.parse::<u64>().unwrap();
+            let Some((timestamp, current_address)) = redirect_from_state.split_once(';') else {
+                tracing::info!("state payload is malformed");
+                return self.unauthorized_response(session).await;
+            };
+            let Ok(timestamp) = timestamp.parse::<u64>() else {
+                tracing::info!("state timestamp is malformed");
+                return self.unauthorized_response(session).await;
+            };
             let current_address = current_address.to_string();
 
-            // Check if the state is still valid from the last 120 seconds (2 minutes)
+            // Check if the state is still valid from the last 120 seconds (2
+            // minutes)
             if timestamp + 120 < get_current_timestamp() {
                 tracing::info!("state has expired");
                 return self.unauthorized_response(session).await;
@@ -271,9 +296,7 @@ impl MiddlewarePlugin for Oauth2 {
             // Step 1: Exchange the code for an access token
             let user = match oauth_provider.get_oauth_user(code).await {
                 Err(err) => {
-                    tracing::error!(
-                        "Failed to exchange code {code}, state {redirect_from_state}: {err}"
-                    );
+                    tracing::error!("Failed to exchange authorization code: {err}");
                     return self.unauthorized_response(session).await;
                 }
                 Ok(user) => user,
