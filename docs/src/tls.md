@@ -57,13 +57,16 @@ negotiated, no PQ anywhere).
 The fix is a build rule, enforced in the repo:
 
 - `.cargo/config.toml` sets `OPENSSL_NO_VENDOR = "1"`; the Nix
-  flake sets the same. Vongola links the **system OpenSSL
+  flake sets the same. Cargo builds link the **system OpenSSL
   (≥ 3.5 required; primo ships 3.6.5)**, whose group list
-  includes both hybrids.
+  includes both hybrids. The flake's default package instead
+  links the flake's own pinned **OpenSSL 4.0.3** build —
+  promoted to default on 2026-10-10 (see the ECH section
+  below); the ≥ 3.5 floor is unchanged for non-flake builds.
 - If the system OpenSSL is older than 3.5, startup fails at the
   groups-list call rather than silently serving classical-only
   TLS. Build hosts must provide OpenSSL ≥ 3.5 headers and
-  libraries; the flake's nixpkgs pin does.
+  libraries; the flake provides 4.0.3 itself.
 
 HTTP/3: Pingora 0.9's stable server surface is HTTP/1.1 + HTTP/2
 (h2 is enabled); there is no HTTP/3 listener in the release, so
@@ -72,7 +75,7 @@ vongola does not claim one.
 </details>
 
 <details>
-<summary>Encrypted Client Hello (ECH) — OpenSSL 4 variant only</summary>
+<summary>Encrypted Client Hello (ECH) — OpenSSL 4, the default build</summary>
 
 The post-quantum handshake above still leaves one thing in
 cleartext: the SNI itself, visible to every on-path observer.
@@ -80,14 +83,20 @@ ECH (RFC 9849) closes that: the client encrypts the real
 ClientHello (true SNI, ALPN) to a key the server publishes in
 DNS, and the outer handshake shows only a cover name.
 
-Vongola implements ECH on the **OpenSSL 4 variant build only**
-(`nix build .#vongola-openssl4`). ECH is new in OpenSSL 4.0 —
+Vongola implements ECH on its **OpenSSL 4 build — which is
+the flake's default** (`nix build`; the `.#vongola-openssl4`
+name remains as an alias). OpenSSL 4.0 was promoted to
+default on 2026-10-10, superseding the spike's
+keep-as-variant verdict (SPEC.md section 15): the 4.0 line
+is not LTS, so its point releases are ours to track in the
+flake until nixpkgs ships 4.x. ECH is new in OpenSSL 4.0 —
 the 3.5 line does not have it, and neither did the Rust
 bindings: the safe binding lives in this tree as the
 dedicated `crates/vongola-ech` crate (the one place `unsafe`
-FFI is allowed), wired behind the `ech` cargo feature. The
-default build does not compile any of it, and refuses —
-exit 2, no silent fallback — if a config enables ECH.
+FFI is allowed), wired behind the `ech` cargo feature. A
+plain cargo build without that feature does not compile
+any of it, and refuses — exit 2, no silent fallback — if a
+config enables ECH.
 
 Enable it per deployment (one ECH identity per listener):
 

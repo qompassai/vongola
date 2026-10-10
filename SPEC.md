@@ -556,20 +556,35 @@ shipping feature until the ECH binding exists. Revisit as
 default when (1) the binding lands, or (2) nixpkgs ships
 OpenSSL 4.x itself.
 
+**Promotion addendum (2026-10-10): SUPERSEDED.** The binding
+landed (section 16) — revisit trigger (1) — and Matt ruled
+the same day: **OpenSSL 4.0 is now the default.** The flake's
+default package links the pinned 4.0.3 derivation and the
+former variant lockfile is now the default `Cargo.lock`
+(openssl 0.10.78 / openssl-sys 0.9.114); `vongola-openssl4`
+remains as an alias of the default package. The non-LTS
+caveat above stands and is now an owned obligation: 4.0.x
+point releases are ours to track (hash-bump the flake's
+openssl4 derivation) until nixpkgs ships 4.x. Full gate
+record in section 16's promotion subsection.
+
 </details>
 
 ## 16. ECH binding patch (2026-10-10)
 
 <details>
-<summary>Implemented for the OpenSSL 4 variant: binding crate, fail-closed config, proof 19/19</summary>
+<summary>Implemented for the OpenSSL 4 build (the flake default since 2026-10-10): binding crate, fail-closed config, proof 19/19</summary>
 
 Section 15's "smallest next step" is done. The binding
 exists, ECH is wired into vongola behind a fail-closed
 config block, and the end-to-end proof passes against the
-pinned OpenSSL 4.0.3 client. The default (OpenSSL 3.5.8)
-build is untouched: it never compiles the binding crate,
-and it refuses to serve an ECH-enabled config (exit 2)
-rather than silently ignoring it.
+pinned OpenSSL 4.0.3 client. At the time of this patch the
+3.5.8 default build was untouched: feature-off builds never
+compile the binding crate, and they refuse to serve an
+ECH-enabled config (exit 2) rather than silently ignoring
+it — that refusal still holds for any build without the
+`ech` feature (see the promotion subsection below for the
+default build's current shape).
 
 ### The binding crate: `crates/vongola-ech`
 
@@ -578,8 +593,9 @@ this tree (vongola's own crates keep
 `#![forbid(unsafe_code)]`). It is deliberately NOT a
 workspace member (it carries its own `[workspace]`); the
 parent build reaches it only as an optional path dependency
-behind vongola's `ech` cargo feature, which only the flake's
-`vongola-openssl4` package enables. It is styled for
+behind vongola's `ech` cargo feature, which the flake's
+default package enables (the `vongola-openssl4` output name
+is kept as an alias of the default). It is styled for
 upstreaming to rust-openssl: the `ffi` module mirrors what
 would land in openssl-sys, the safe modules mirror an
 `openssl::ech` module.
@@ -721,6 +737,43 @@ and changed files; `nix build` green for BOTH packages
 `nix flake check` all passed; the default binary
 links nixpkgs OpenSSL 3.5.8 and exits 2 on an ECH-enabled
 config.
+
+### Promotion to default (2026-10-10)
+
+Matt's ruling (2026-10-10): **make OpenSSL 4.0 the
+default**, folding this branch into the landing stack. What
+changed:
+
+- The flake's default package is the former variant
+  definition: the pinned OpenSSL 4.0.3 derivation,
+  `OPENSSL_DIR` pointed at it, the `ech` cargo feature
+  enabled. `packages.vongola-openssl4` remains as an alias
+  (same derivation) so existing references keep working.
+- `Cargo-openssl4.lock` became the default `Cargo.lock`
+  (openssl 0.10.78 / openssl-sys 0.9.114); the separate
+  variant lockfile is gone — one lockfile, one OpenSSL.
+- Nothing else moved: the `ech` feature is still opt-in
+  at the cargo level (a plain `cargo build` compiles no
+  shim code and still exits 2 on an ECH-enabled config),
+  and ECH itself is still a runtime config opt-in,
+  default off.
+
+Gates re-run on the promoted tree (primo, 2026-10-10):
+default `nix build` — binary links `libssl.so.4` /
+`libcrypto.so.4` from the pinned openssl-4.0.3 store path,
+zero references to 3.5.8; in-sandbox suite 63/63. Cargo:
+default `cargo test` 57/57, `--features ech` 63/63,
+binding crate 17/17; clippy `-D warnings` clean on both
+feature sets; fmt clean. Release build of the default
+shape (feature on): smoke **38/0** with ECH disabled,
+`scripts/ech-proof.sh` **19/19**. `nix flake check`: all
+checks passed.
+
+Ownership note (the cost accepted with the ruling): 4.0
+is not an LTS line. Until nixpkgs ships OpenSSL 4.x, each
+4.0.x point release is a manual hash-bump of the flake's
+openssl4 derivation plus a re-run of these gates — the
+same discipline the spike applied to reach 4.0.3.
 
 ### What remains operational (not code)
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # #################################################################
 # /qompassai/vongola/scripts/ech-proof.sh
-# Qompass AI — vongola ECH end-to-end proof (OpenSSL 4 variant)
+# Qompass AI — vongola ECH end-to-end proof (OpenSSL 4)
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Qompass AI
 #
@@ -18,11 +18,12 @@
 # limitations under the License.
 # #################################################################
 #
-# Proves ECH (RFC 9849) end to end against the variant release
-# binary (target/release/vongola built with the `ech` feature,
-# i.e. the flake's vongola-openssl4 package or an equivalent
-# cargo build): the server generates its ECH keypair on first
-# start, a client offering the published ECHConfigList gets
+# Proves ECH (RFC 9849) end to end against the default release
+# binary (target/release/vongola built with the `ech` feature
+# against OpenSSL 4.0.3, i.e. the flake's default package or an
+# equivalent cargo build): the server generates its ECH
+# keypair on first start, a client offering the published
+# ECHConfigList gets
 # ECH accepted, a client offering a stale config gets the
 # server's retry config, and classical clients are unaffected.
 # Loopback only. The ECH-disabled negative is covered by
