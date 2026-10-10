@@ -1,0 +1,21 @@
+# Adversarial / control: vongola's mutating MCP tools are
+# ask-tier (attention = ["hitl"]) — a human authority must clear
+# each call. Replay has no authority, so both spellings of both
+# tools replay as deny; live, they surface as an approval request,
+# never a silent allow.
+
+host/claude-code/mcp__vongola__config_reload {
+}
+expect deny
+
+host/claude-code/mcp__vongola__rotate_self_signed {
+}
+expect deny
+
+mcp/vongola/config_reload {
+}
+expect deny
+
+mcp/vongola/rotate_self_signed {
+}
+expect deny

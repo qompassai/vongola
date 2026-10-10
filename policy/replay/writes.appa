@@ -1,0 +1,23 @@
+# Validation: writes of the worker's own content from a fresh
+# trajectory. The repo is the cleared destination; enumerated
+# outside destinations still accept public-labelled data.
+
+host/claude-code/Write {
+  file_path: "/home/phaedrus/workspace/repos/vongola/notes.md"
+}
+expect allow
+
+host/claude-code/Edit {
+  file_path: "/home/phaedrus/workspace/repos/vongola/crates/vongola/src/main.rs"
+}
+expect allow
+
+host/claude-code/Write {
+  file_path: "/tmp/scratch.md"
+}
+expect allow
+
+host/claude-code/Write {
+  file_path: "/home/phaedrus/scratch.md"
+}
+expect allow

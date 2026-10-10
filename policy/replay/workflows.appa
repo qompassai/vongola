@@ -1,0 +1,43 @@
+# Validation: the repo's own workflows run under the profile.
+# A fresh trajectory holds public data only; build, check and
+# script calls are the worker's tools, allowed, label unchanged.
+
+host/claude-code/Bash {
+  command: "cargo build --locked"
+}
+expect allow
+
+host/claude-code/Bash {
+  command: "cargo clippy --all-targets -- -D warnings"
+}
+expect allow
+
+host/claude-code/Bash {
+  command: "cargo fmt --all -- --check"
+}
+expect allow
+
+host/claude-code/Bash {
+  command: "cargo test --workspace"
+}
+expect allow
+
+host/claude-code/Bash {
+  command: "nix build .#vongola"
+}
+expect allow
+
+host/claude-code/Bash {
+  command: "nix flake check"
+}
+expect allow
+
+host/claude-code/Bash {
+  command: "bash scripts/smoke.sh"
+}
+expect allow
+
+host/claude-code/Bash {
+  command: "./scripts/ech-proof.sh"
+}
+expect allow

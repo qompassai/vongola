@@ -1,0 +1,20 @@
+# Adversarial — sink spoofing. A destination that merely looks
+# like the cleared repo path is not the repo: the cleared selector
+# needs the exact /workspace/repos/vongola/ segment, so lookalike
+# directories land on the uncleared /home rule and secret-labelled
+# content cannot flow to them.
+
+host/claude-code/Read {
+  file_path: "/home/phaedrus/workspace/repos/vongola/vongola-state/selfsigned/cert.pem"
+}
+expect allow
+
+host/claude-code/Write {
+  file_path: "/home/phaedrus/workspace/repos/vongola-evil/leak.md"
+}
+expect deny
+
+host/claude-code/Write {
+  file_path: "/home/phaedrus/workspace/repos/vongola2/leak.md"
+}
+expect deny

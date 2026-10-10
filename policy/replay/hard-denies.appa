@@ -1,0 +1,37 @@
+# Adversarial: the destructive set is hard-denied, no remedy —
+# the same set the worker permission profiles deny.
+
+host/claude-code/Bash {
+  command: "rm -rf /home/phaedrus/workspace/repos/vongola/target"
+}
+expect deny
+
+host/claude-code/Bash {
+  command: "rm -fr vongola-state"
+}
+expect deny
+
+host/claude-code/Bash {
+  command: "git reset --hard origin/master"
+}
+expect deny
+
+host/claude-code/Bash {
+  command: "git clean -fd"
+}
+expect deny
+
+host/claude-code/Bash {
+  command: "git push origin master"
+}
+expect deny
+
+host/claude-code/Bash {
+  command: "gh repo view qompassai/vongola"
+}
+expect deny
+
+host/claude-code/Bash {
+  command: "sudo systemctl restart vongola"
+}
+expect deny

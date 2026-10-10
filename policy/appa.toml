@@ -1,0 +1,295 @@
+# Vongola worker profile for OpenAPPA (estate adaptation, 2026-10-10).
+#
+# A dispatched Claude worker building and checking this repository
+# (Rust/Pingora reverse proxy: cargo + nix builds, the smoke and
+# ECH-proof scripts) gets the repo workflows it needs, while the
+# operations the worker profiles deny stay denied at the APPA layer
+# too — a second, deterministic gate under the harness's own
+# permissions. Modeled on the estate pilot profile
+# (~/openappa-pilot/profiles/image/appa.toml; pilot report
+# ~/openappa-pilot/PILOT_REPORT.md), same pinned upstream:
+# appa 0.30.0 @ 5060566a.
+#
+# Validated offline with the pinned pilot binary:
+#   appa describe --config policy/appa.toml --check
+#   appa replay   --config policy/appa.toml policy/replay/
+#
+# The include is relative to this file (APPA requires it) and
+# resolves, in primo's layout, to the pilot tree's claude-code
+# battery: policy/ -> repo -> repos -> workspace -> home.
+#
+# Root rules run before the included battery's rules, and the first
+# matching rule wins, so the groups below are ordered: hard denies,
+# network sinks, secret labels, MCP ask tier, workflow allows,
+# writes. Selectors are alphabetical inside each group wherever the
+# ordering is free. `blocked` is the reserved attention mark no
+# authority can permit: those calls have no remedy, in replay or
+# live. `hitl` is the ask tier: a human authority must clear the
+# call; replay has no authority, so ask-tier calls replay as deny.
+
+include = ["../../../../openappa-pilot/src/marketplace/batteries/claude-code/appa.toml"]
+
+[policy]
+version = 2
+trust_chain = ["suspicious", "trusted"]
+
+# --- destructive operations: hard deny, no remedy ---
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:gh *)"
+requires = { attention = ["blocked"] }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*git clean*)"
+requires = { attention = ["blocked"] }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*git push*)"
+requires = { attention = ["blocked"] }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*git reset*)"
+requires = { attention = ["blocked"] }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*rm -fr*)"
+requires = { attention = ["blocked"] }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*rm -rf*)"
+requires = { attention = ["blocked"] }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*sudo *)"
+requires = { attention = ["blocked"] }
+delta = {}
+
+# --- network sinks: the session data must be public-shareable ---
+#
+# A network destination may only receive data whose audience is
+# still public. Once the session has read secret material (below),
+# its audience has narrowed and every one of these is refused.
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*curl *)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:curl)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*nc *)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*ncat *)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*netcat *)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*scp *)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*sftp *)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*wget *)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:wget)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+# --- secret data: reads narrow the session audience to `self` ---
+#
+# Vongola secret surfaces: the state dir (default ./vongola-state;
+# holds ECH, TLS and onion key material, ECH keys under
+# <state_dir>/ech/) and the operator config vongola.yaml (names
+# route auth hashes, secret env vars and key paths). TLS/ECH PEM
+# key files by extension are already narrowed by the battery (*.key,
+# *.pem); the rules here add the repo-specific surfaces. A Bash
+# command naming a secret path is the same read, mirrored the way
+# the battery mirrors its credential paths.
+
+[[policy.tool]]
+name = "host/claude-code/Read(file_path:*/vongola-state/*)"
+delta = { audience = ["self"] }
+tags = ["credentials"]
+
+[[policy.tool]]
+name = "host/claude-code/Read(file_path:vongola-state/*)"
+delta = { audience = ["self"] }
+tags = ["credentials"]
+
+[[policy.tool]]
+name = "host/claude-code/Read(file_path:*/vongola.yaml)"
+delta = { audience = ["self"] }
+tags = ["credentials"]
+
+[[policy.tool]]
+name = "host/claude-code/Read(file_path:vongola.yaml)"
+delta = { audience = ["self"] }
+tags = ["credentials"]
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*vongola-state*)"
+delta = { audience = ["self"] }
+tags = ["credentials"]
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*vongola.yaml*)"
+delta = { audience = ["self"] }
+tags = ["credentials"]
+
+# --- vongola MCP tools that mutate the running proxy: ask tier ---
+#
+# config_reload and rotate_self_signed change live proxy state, so
+# they require a human authority (hitl) on every call. Both name
+# spellings are declared: the claude-code host spelling an MCP tool
+# carries in a Claude session, and APPA's canonical mcp/ spelling.
+
+[[policy.tool]]
+name = "host/claude-code/mcp__vongola__config_reload"
+requires = { attention = ["hitl"] }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/mcp__vongola__rotate_self_signed"
+requires = { attention = ["hitl"] }
+delta = {}
+
+[[policy.tool]]
+name = "mcp/vongola/config_reload"
+requires = { attention = ["hitl"] }
+delta = {}
+
+[[policy.tool]]
+name = "mcp/vongola/rotate_self_signed"
+requires = { attention = ["hitl"] }
+delta = {}
+
+# --- the repo's own workflows: allowed, label unchanged ---
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*cargo build*)"
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*cargo clippy*)"
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*cargo fmt*)"
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*cargo test*)"
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*nix build*)"
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*nix flake check*)"
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*scripts/ech-proof.sh*)"
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Bash(command:*scripts/smoke.sh*)"
+delta = {}
+
+# --- writes: the repo is the one cleared destination ---
+#
+# Session data of any label may be written inside the repository.
+# Every other enumerated destination is uncleared: only
+# public-labelled session data may flow there, so a session that
+# has read secret material cannot write it back out — and a
+# lookalike path (vongola-evil/, vongola2/) is not the repo: it
+# misses the cleared selector below and lands on the /home rule.
+
+[[policy.tool]]
+name = "host/claude-code/Write(file_path:*/workspace/repos/vongola/*)"
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Write(file_path:/etc/*)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Write(file_path:/home/*)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Write(file_path:/root/*)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Write(file_path:/tmp/*)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Write(file_path:/var/tmp/*)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Edit(file_path:*/workspace/repos/vongola/*)"
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Edit(file_path:/etc/*)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Edit(file_path:/home/*)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Edit(file_path:/root/*)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Edit(file_path:/tmp/*)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[[policy.tool]]
+name = "host/claude-code/Edit(file_path:/var/tmp/*)"
+requires = { audience = { contains = ["public"] } }
+delta = {}
+
+[externals]
+timeout_ms = 5000
+max_body_bytes = 65536
