@@ -15,11 +15,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# #################################################################
 
 [workspace]
+members = ["crates/vongola"]
 resolver = "2"
-members = ["crates/plugin_request_id", "crates/plugins_api", "crates/vongola"]
 
 [workspace.package]
+edition = "2024"
 license = "Apache-2.0"
 rust-version = "1.88"
+
+[profile.release]
+lto = "thin"
