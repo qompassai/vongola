@@ -388,6 +388,29 @@ execution.
 
 </details>
 
+## 12A. Field findings from implementation (2026-10-10)
+
+Two findings from building against this spec; both are now part
+of the contract:
+
+1. **Vendored OpenSSL predates ML-KEM.** Pingora 0.9's default
+   build vendors OpenSSL 3.4.0, which has no ML-KEM groups at
+   all. Section 5's posture is therefore only reachable when
+   linking a system OpenSSL >= 3.5. The repo enforces this:
+   `.cargo/config.toml` and the Nix flake set
+   `OPENSSL_NO_VENDOR = "1"`, and startup fails at the
+   groups-list call if the linked OpenSSL cannot accept the
+   allowlist. Live evidence (primo, system OpenSSL 3.6.5):
+   `Negotiated TLS1.3 group: X25519MLKEM768`.
+2. **Pingora's default shutdown drain is unbounded.**
+   `ServerConf::default()` leaves
+   `graceful_shutdown_timeout_seconds` unset, so a server can
+   wait forever for connections to drain after SIGTERM — the
+   exact shape of the old tree's named defect. Vongola wires
+   `shutdown_grace_secs` (and `worker_threads`) into
+   `ServerConf` explicitly; smoke measures a complete SIGTERM
+   shutdown in ~0.1 s on loopback with the cap as the bound.
+
 ## 13. Feature accounting vs the previous tree
 
 <details>

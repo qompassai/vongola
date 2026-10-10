@@ -15,13 +15,109 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# #################################################################
+# Adapted from Matt's dotfiles mdBook template
+# (.config/mdbook/book.toml in qompassai/dotfiles). Deltas from
+# the template: book identity; src = "docs/src"; the pandoc
+# output is dropped (mdbook-pandoc is not installed on the build
+# host); the template's "theme/book.cs" search typo is corrected;
+# the stray top-level heading-split-level line is removed (it
+# lands inside [build] and mdBook rejects it); [rust] edition is
+# "2021" because mdbook-admonish's parser rejects "2024"; and the
+# admonish + d2 preprocessors are omitted because the installed
+# builds (admonish 1.18.0, d2) fail against mdbook 0.5.4's
+# preprocessor context format on the build host (verified with a
+# minimal mdbook-init repro for admonish). Re-enable them when
+# the host toolchain pair is compatible again.
 
 [book]
-title = "Vongola"
 authors = ["Qompass AI"]
+description = "Vongola: a clean-room reverse proxy and web server on Pingora 0.9 — hosting, lean, and fleet profiles, post-quantum TLS, MCP/A2A operator surfaces, NAT traversal, Tor onion services (never an exit node), and proxy chains."
 language = "en"
 src = "docs/src"
+text-direction = "ltr"
+title = "Vongola"
 
 [build]
 build-dir = "book"
-create-missing = false
+create-missing = true
+extra-watch-dirs = []
+use-default-preprocessors = true
+
+[preprocessor.footnote]
+renderers = ["html"]
+
+[preprocessor.graphviz]
+renderers = ["html"]
+
+[preprocessor.katex]
+renderers = ["html"]
+
+[preprocessor.links]
+renderers = ["html"]
+
+[preprocessor.mermaid]
+renderers = ["html"]
+
+[preprocessor.pagetoc]
+renderers = ["html"]
+
+[output.epub]
+command = "mdbook-epub"
+
+[output.html]
+additional-css = ["theme/book.css"]
+
+[output.html.code]
+hidelines = { python = "~" }
+
+[output.html.fold]
+enable = false
+level = 0
+
+[output.html.playground]
+copyable = true
+copy-js = true
+editable = false
+line-numbers = false
+runnable = true
+
+[output.html.print]
+enable = true
+page-break = true
+
+[output.html.search]
+additional-css = ["theme/book.css"]
+additional-js = ["theme/book.js"]
+admonitions = true
+boost-hierarchy = 2
+boost-paragraph = 1
+boost-title = 2
+cname = "qompass.ai"
+definition-lists = true
+edit-url-template = "https://github.com/qompassai/vongola/edit/master/docs/src/{path}"
+enable = true
+expand = true
+git-repository-icon = "fab-github"
+git-repository-url = "https://github.com/qompassai/vongola"
+heading-split-level = 3
+input-404 = "not-found.md"
+limit-results = 30
+mathjax-support = false
+no-section-label = false
+preferred-dark-theme = "navy"
+sidebar-header-nav = true
+smart-punctuation = true
+teaser-word-count = 30
+use-boolean-and = true
+
+[output.html.search.chapter]
+"appendix" = { enable = false }
+"appendix/glossary.md" = { enable = true }
+
+[output.markdown]
+
+site-url = "/vongola/"
+
+[rust]
+edition = "2021"

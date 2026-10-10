@@ -1,32 +1,86 @@
 # Architecture
 
-The workspace has three crates:
+Vongola is one Rust binary on Pingora 0.9.0 (pinned `=0.9.0`,
+verified as the latest release on crates.io at build time,
+2026-10-10). Pingora provides the server framework, HTTP proxy
+machinery, connection pooling, and the OpenSSL-backed TLS
+acceptor; everything product-shaped — configuration, routing,
+auth, NAT, Tor, chains, MCP/A2A, the dashboard — is vongola code
+in a single crate with alphabetically ordered modules.
 
-- `crates/vongola` — the server binary and all services.
-- `crates/plugins_api` — the WIT (`wit/plugin.wit`) component
-  bindings: a `Session` (method, URI, status, ordered headers), a
-  `Context` string, and a `Plugin` trait with an `on_request_filter`
-  hook. This is a scaffold for out-of-process plugins; the in-process
-  plugins under `crates/vongola/src/plugins/` are separate.
-- `crates/plugin_request_id` — a small library that mints request IDs
-  (`req-<n>` from a process-wide atomic counter) and derives
-  context-qualified IDs from them.
+<details>
+<summary>Process layout</summary>
 
-Inside the server binary:
+One process, three listeners, one background service:
 
-- `proxy_server/` — `http_proxy` (redirect to HTTPS), `https_proxy`
-  (the `ProxyHttp` implementation: route lookup, plugin execution,
-  cache lookup/insertion, upstream selection), `cert_store` (the
-  Pingora `TlsAccept` callback that picks a certificate by SNI).
-- `stores/` — papaya hash-map stores for routes, certificates, ACME
-  challenges, and caches, all behind free functions
-  (`get_route_by_key`, `insert_certificate`, ...).
-- `services/` — background services: `discovery` (static routes from
-  config, plus Docker/Swarm watchers), `letsencrypt` (ACME HTTP-01
-  issuance and the self-signed fallback), `logger` (a bounded async
-  log pipeline), and health checking.
+- **HTTPS listener** — the Pingora proxy service. SNI selects the
+  certificate through a `TlsAccept` callback; TLS settings pin
+  TLS 1.3 and the configured group allowlist (see the TLS
+  chapter). HTTP/2 is enabled.
+- **HTTP listener** — a small `ServeHttp` app: 308 redirect to
+  HTTPS, ACME HTTP-01 challenge answers, and the Agent Card over
+  HTTP.
+- **Admin listener** — a `ServeHttp` app for operators:
+  `/healthz`, `/metrics`, `/api/state`, `/dashboard`,
+  `/api/reload`, `/api/rotate-self-signed`, `/mcp`. Mutations
+  require the operator token; nothing here is reachable from the
+  public routes.
+- **Background service** — upstream health checks and chain
+  probes, NAT mapping managers (acquire/renew/release), Tor
+  onion publication with retry, and Docker/Swarm discovery.
 
-Request flow (HTTPS): TLS handshake with SNI certificate selection →
-route lookup by host → path matcher → request plugins → cache lookup
-→ upstream via the route's load balancer → response plugins → cache
-insertion if the route enables it.
+Subcommands (alphabetical): `mcp` (stdio MCP server), `serve`
+(the default), `validate-config`, `version`.
+
+</details>
+
+<details>
+<summary>Request path</summary>
+
+`request_filter` decides everything before an upstream is
+touched: www→apex 308, route lookup by host + longest path
+prefix, the Agent Card path, a Content-Length body bound
+(default 16 MiB, per-route override; oversized is a 413), route
+auth (basic, JWT, or the OAuth2 dance), static-file service for
+hosting routes, and chained fetch for chained routes. Plain
+routes select a healthy upstream round-robin; all-known-down is
+a 502. `logging` records the access line and metrics — through a
+bounded (1024) redacting log pipeline whose drop counter is
+itself a metric. Credentials, tokens, and authorization codes
+are redacted before any log line is emitted, and a test audits
+for secret patterns.
+
+</details>
+
+<details>
+<summary>State and reload</summary>
+
+Shared state lives behind locks in one `State` struct: current
+config (atomically swapped), the certificate store, ACME
+challenges, upstream and chain health, NAT and Tor status,
+discovered upstreams, and metrics. `POST /api/reload` (operator
+token required) re-reads the config file, rebuilds the
+certificate store, and swaps both atomically; a failed reload
+keeps the old state and returns the structured errors. The
+config's canonical-JSON SHA-256 is the fleet bundle fingerprint
+shown on the dashboard and in the Agent Card.
+
+</details>
+
+<details>
+<summary>Design rules</summary>
+
+- **Fail closed.** Invalid config, unknown SNI, dead chain hops,
+  exit-enabling Tor settings, pure-ML-KEM TLS groups, HCL input:
+  all are structured errors, never silent fallbacks.
+- **Every knob is wired.** Each config field has a validation or
+  behavior test. The cautionary tale from the old tree — a
+  parsed-but-unwired flag that made handshakes impossible — is
+  why `worker_threads` and `shutdown_grace_secs` are wired into
+  `ServerConf` explicitly and proven in smoke.
+- **Bounded everything.** Log channel, body sizes, chain length
+  (8 hops), cache sizes, response sizes, timeouts. Tiger Style:
+  explicit contracts, no hidden behavior, alphabetical order in
+  modules, files, functions, and lists.
+
+</details>

@@ -1,49 +1,52 @@
-<p align="center">
-  <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Rust"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0"></a>
-</p>
-
 # Vongola
 
-A reverse proxy built on [Pingora](https://github.com/cloudflare/pingora):
-TLS termination with SNI certificate selection, host/path routing,
-response caching, authentication plugins (JWT, OAuth2, basic auth),
-Let's Encrypt issuance, and Docker/Swarm discovery.
+<a href="./LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0"></a>
+
+Vongola is Qompass AI's reverse proxy and web server — a
+clean-room rewrite on **Pingora 0.9.0**. It hosts **qompass.ai**,
+runs on a single small device, and scales across a fleet of
+small nodes (NVIDIA Jetson-class dev kits, thin/slim clients)
+sharing one versioned configuration bundle.
+
+- **Hosting**: SNI TLS termination, www→apex 308, static hosting
+  with cache rules + gzip, proxied routes with health-checked
+  round-robin upstreams.
+- **Post-quantum TLS**: TLS 1.3 only with ML-KEM hybrid key
+  exchange — live-negotiated `X25519MLKEM768` in smoke. Builds
+  must link system OpenSSL ≥ 3.5 (see the book's TLS chapter for
+  the vendored-OpenSSL trap).
+- **Operator surfaces**: MCP server (read-only-first, auth-gated
+  mutations), signed A2A Agent Card, populated Prometheus
+  metrics, and a live dashboard (NAT, Tor, chains, upstreams,
+  certs).
+- **NAT traversal**: PCP / NAT-PMP / UPnP IGD, opt-in per
+  listener, leased and released on shutdown.
+- **Tor onion services**: publish routes as v3 onion services.
+  **Vongola is never a Tor exit node** — enforced in config
+  validation, not just documented.
+- **Proxy chains**: SOCKS5h / HTTP CONNECT / Tor / vongola hops,
+  DNS through the chain, fail closed (a dead hop is a 502, never
+  a direct fallback).
 
 ## Quickstart
 
-```sh
-cargo run --release -- --config-path ./examples
-# HTTP :8080 redirects to HTTPS; HTTPS proxy on :4433; metrics on :9090
+```bash
+cargo build --release
+./target/release/vongola validate-config --config examples/qompass.yaml
+./target/release/vongola serve --config examples/lean.yaml
+bash scripts/smoke.sh   # full live smoke against loopback fixtures
 ```
-
-Or with Nix: `nix build` / `nix develop` (see the book's Nix chapter).
 
 ## Documentation
 
-The full documentation is an mdBook under [`docs/src/`](docs/src/)
-(what it is, architecture, contracts and bounds, security model,
-operations, Nix usage, and the testing story):
+The mdBook in `docs/src` (build with `mdbook build`) covers
+architecture, the hosting/lean/fleet profiles, the TLS/PQC
+posture with negotiation evidence, MCP/A2A, NAT, Tor, chains,
+the dashboard, a configuration reference, the operations
+runbook, the Homa and Mojo verdicts, and the feature accounting
+against the previous tree. `SPEC.md` is the clean-room contract
+the implementation was written against.
 
-```sh
-mdbook build   # renders to book/ (gitignored)
-```
+## License
 
-<details>
-<summary>Toolchain</summary>
-
-Pinned by `rust-toolchain.toml`: nightly-2026-09-25
-(rustc 1.100.0-nightly), edition 2024. Gates: `cargo build`,
-`cargo test`, `cargo clippy -- -D warnings`, `cargo fmt --check`,
-`mdbook build` — all green; see the book's Testing chapter for the
-suite shape and the named gaps (metrics instrumentation, graceful
-shutdown timing, OAuth2 state AEAD).
-
-</details>
-
-<details>
-<summary>License</summary>
-
-Apache-2.0 — see [LICENSE](LICENSE). Copyright 2026 Qompass AI.
-
-</details>
+Apache-2.0. Copyright 2026 Qompass AI.

@@ -1,41 +1,90 @@
-# Operations
+# Operations and fleet runbook
 
-## Build
+<details>
+<summary>Build and verify</summary>
 
-```sh
-cargo build --release        # or: nix build
+```bash
+cargo build --release          # links system OpenSSL >= 3.5 (see TLS chapter)
+cargo test                     # unit suite (validation + adversarial)
+cargo clippy --all-targets -- -D warnings
+cargo fmt --check
+bash scripts/smoke.sh          # full live smoke (loopback fixtures + tor + NAT)
+nix build                      # sandbox build, runs the test suite
+nix flake check
 ```
 
-The toolchain is pinned by `rust-toolchain.toml`
-(nightly-2026-09-25, rustc 1.100.0-nightly); the workspace is
-edition 2024 with `rust-version = "1.88"` as the declared floor.
+The IDE gate used for this codebase is Matt's own stack:
+headless Neovim with the live diver config — rust-analyzer,
+bacon-ls running the clippy job, and crates-lsp on the
+manifests — at zero error/warning diagnostics.
 
-## Run
+</details>
 
-```sh
-vongola --config-path /etc/vongola/configs
+<details>
+<summary>Run</summary>
+
+```bash
+vongola validate-config --config /path/to/config.yaml
+vongola serve --config /path/to/config.yaml
+vongola mcp --config /path/to/config.yaml   # stdio MCP for local tooling
+vongola version
 ```
 
-`--config-path` points at a directory of YAML/HCL config files (see
-`examples/example.yaml` and `examples/example.hcl`); without it the
-fallback path baked into `main.rs` is `/etc/vongola/configs`.
-Environment overrides use the `VONGOLA_` prefix with `__` for nesting
-(e.g. `VONGOLA__LOGGING__LEVEL=DEBUG`).
+Day-2 surfaces: `GET /healthz` and `/metrics` on the admin
+listener; the dashboard at `/dashboard`; hot reload via
+`POST /api/reload` with the operator token (a failed reload
+keeps the running state); self-signed rotation via
+`POST /api/rotate-self-signed` or the MCP tool of the same
+intent.
 
-## Ports
+Shutdown is SIGTERM: listeners stop, connections drain within
+`shutdown_grace_secs`, NAT mappings are released, and the
+process exits (smoke measures ~0.1 s on loopback; the cap is
+the bound, not the expectation).
 
-| Port | Service |
-|------|---------|
-| 8080 | HTTP → HTTPS redirect (308) |
-| 4433 | HTTPS proxy (TLS, SNI, HTTP/2) |
-| 9090 | Prometheus-format metrics HTTP |
+</details>
 
-## Smoke evidence (2026-10, this tree)
+<details>
+<summary>Fleet rollout</summary>
 
-With a one-route config (host `smoke.local`, upstream a local static
-server, `self_signed_on_failure: true`, Let's Encrypt disabled):
-`GET /marker.txt` on :8080 returned `308 -> https://smoke.local/...`;
-the same fetch over :4433 completed the TLS handshake (self-signed
-certificate created on demand) and returned the upstream body;
-:9090 answered 200 with an empty metrics body (see Security →
-Named gaps).
+1. Bump `bundle_version`, validate the bundle
+   (`validate-config`), and record its SHA-256 fingerprint.
+2. Roll the same file to every node (any config-sync tool; the
+   nodes are shared-nothing and order-independent).
+3. Verify convergence on each node's dashboard or
+   `config_snapshot` MCP tool: bundle version + fingerprint
+   must match across the fleet; Agent Cards carry the same
+   fingerprint for peer checks.
+4. Front the fleet with anycast or an L4 balancer health-checking
+   the admin `/healthz`; no sticky sessions are needed.
+
+ARM64 status: the flake declares `aarch64-linux`; on an x86_64
+build host without a remote/ARM builder, `nix build
+.#packages.aarch64-linux.default` evaluates but cannot compile
+natively — Jetson targets should build on-device or on an ARM
+builder. The Rust code has no x86-only dependencies; the gap is
+build-host architecture, and it is stated here rather than
+papered over.
+
+</details>
+
+<details>
+<summary>Troubleshooting shapes</summary>
+
+- **Handshake failures after config change:** `validate-config`
+  first; then check the cert inventory (dashboard/MCP) — no cert
+  + no `self_signed_fallback` = deliberate failure.
+- **TLS negotiated a classical group:** the binary was built
+  against vendored or < 3.5 OpenSSL. Rebuild per the TLS
+  chapter; `ldd` should show the system `libssl.so.3`.
+- **NAT state shows an error:** read `last_error` — gateway
+  refusals and SOAP faults are surfaced verbatim. The proxy is
+  unaffected.
+- **Tor status shows an error:** the daemon is unreachable or
+  unauthenticated; publication retries in the background and the
+  proxy keeps serving.
+- **502s on one route:** check upstream health and, for chained
+  routes, hop health on the dashboard — chains fail closed by
+  design.
+
+</details>
