@@ -67,12 +67,15 @@
             cargo = toolchain;
             rustc = toolchain;
           };
-          # SPIKE 2026-10-10 (branch spike/openssl4-vongola-20261010):
-          # OpenSSL 4.0.3 from the pinned upstream tarball, used ONLY
-          # by the vongola-openssl4 variant below. The default package
-          # keeps nixpkgs' OpenSSL (3.5.8 in the pinned lock). The 4.0
-          # line is the first with ECH (RFC 9849); it is NOT an LTS
-          # line. Tarball SHA256 below is the official checksum from
+          # OpenSSL 4.0.3 from the pinned upstream tarball.
+          # PROMOTED TO DEFAULT 2026-10-10 by Matt's ruling,
+          # superseding the spike's keep-as-variant verdict (SPEC
+          # section 15): the default package below links this
+          # build. The 4.0 line is the first with ECH (RFC 9849);
+          # it is NOT an LTS line, so its point releases are ours
+          # to track (hash-bump this derivation) until nixpkgs
+          # ships 4.x itself. Tarball SHA256 below is the official
+          # checksum from
           # https://www.openssl.org/source/openssl-4.0.3.tar.gz.sha256
           # (325b5c806167c13b40b1ffeadfe0248197c00eccc4cf123ec1e28d2d2fd216d9).
           openssl4 = pkgs.stdenv.mkDerivation {
@@ -98,11 +101,12 @@
               make install_sw
               runHook postInstall
             '';
-            # OpenSSL's own test suite is out of scope for the spike;
-            # the consumers' gates (cargo test, smoke) are the check.
+            # OpenSSL's own test suite is out of scope for this
+            # build; the consumers' gates (cargo test, smoke, the
+            # ECH proof) are the check.
             doCheck = false;
             meta = {
-              description = "OpenSSL 4.0.3 (spike build for vongola-openssl4)";
+              description = "OpenSSL 4.0.3 (pinned build; vongola's default TLS library)";
               license = pkgs.lib.licenses.asl20;
             };
           };
@@ -133,32 +137,29 @@
                 mainProgram = "vongola";
               };
             };
-        in
-        {
-          default = mkVongola {
-            lockFile = ./Cargo.lock;
-            opensslPkg = pkgs.openssl;
-          };
-          openssl4 = openssl4;
-          # Variant: same tree, own lockfile (openssl/openssl-sys
-          # bumped to the first releases with OpenSSL 4.x support),
-          # linked against the OpenSSL 4.0.3 build above, with
-          # the `ech` cargo feature enabled (ECH bindings live in
-          # crates/vongola-ech; the default package never enables
-          # the feature and never compiles that crate).
-          vongola-openssl4 = mkVongola {
+          # The default package: linked against the OpenSSL 4.0.3
+          # build above, from the unified Cargo.lock (openssl
+          # 0.10.78 / openssl-sys 0.9.114 — the first releases
+          # with OpenSSL 4.x support), with the `ech` cargo
+          # feature enabled (ECH bindings live in
+          # crates/vongola-ech). The feature stays opt-in at the
+          # cargo level: a plain `cargo build` never compiles
+          # that crate, and ECH itself is a runtime config
+          # opt-in, default off (SPEC section 16).
+          vongolaDefault = mkVongola {
             buildFeatures = [ "ech" ];
             extraEnv = { OPENSSL_DIR = "${openssl4}"; };
-            # buildRustPackage requires the in-tree Cargo.lock to
-            # match the lockFile it vendors from; the variant swaps
-            # its own lockfile in during patchPhase. The default
-            # package is untouched (no postPatch, original lock).
-            extraPostPatch = ''
-              cp ${./Cargo-openssl4.lock} Cargo.lock
-            '';
-            lockFile = ./Cargo-openssl4.lock;
+            lockFile = ./Cargo.lock;
             opensslPkg = openssl4;
           };
+        in
+        {
+          default = vongolaDefault;
+          openssl4 = openssl4;
+          # Alias of the default package, kept working: the name
+          # predates the 2026-10-10 promotion (it was the spike
+          # variant's output) and scripts/docs referenced it.
+          vongola-openssl4 = vongolaDefault;
         });
     };
 }
