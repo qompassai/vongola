@@ -106,11 +106,12 @@
               license = pkgs.lib.licenses.asl20;
             };
           };
-          mkVongola = { extraEnv ? { }, extraPostPatch ? "", lockFile, opensslPkg }:
+          mkVongola = { buildFeatures ? [ ], extraEnv ? { }, extraPostPatch ? "", lockFile, opensslPkg }:
             rustPlatform.buildRustPackage {
               pname = "vongola";
               version = "0.2.0";
               src = ./.;
+              buildFeatures = buildFeatures;
               cargoLock.lockFile = lockFile;
               nativeBuildInputs = [
                 pkgs.autoPatchelfHook
@@ -141,8 +142,12 @@
           openssl4 = openssl4;
           # Variant: same tree, own lockfile (openssl/openssl-sys
           # bumped to the first releases with OpenSSL 4.x support),
-          # linked against the OpenSSL 4.0.3 build above.
+          # linked against the OpenSSL 4.0.3 build above, with
+          # the `ech` cargo feature enabled (ECH bindings live in
+          # crates/vongola-ech; the default package never enables
+          # the feature and never compiles that crate).
           vongola-openssl4 = mkVongola {
+            buildFeatures = [ "ech" ];
             extraEnv = { OPENSSL_DIR = "${openssl4}"; };
             # buildRustPackage requires the in-tree Cargo.lock to
             # match the lockFile it vendors from; the variant swaps

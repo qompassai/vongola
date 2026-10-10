@@ -2115,6 +2115,7 @@ dependencies = [
  "bytes",
  "ed25519-dalek",
  "flate2",
+ "foreign-types-shared",
  "hmac",
  "http",
  "log",
@@ -2129,6 +2130,16 @@ dependencies = [
  "tempfile",
  "time",
  "tokio",
+ "vongola-ech",
+]
+
+[[package]]
+name = "vongola-ech"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "libc",
+ "openssl-sys",
 ]
 
 [[package]]
