@@ -18,6 +18,11 @@
 # #################################################################
 
 [workspace]
+# crates/vongola-ech is excluded on purpose: it is a standalone
+# crate (its own workspace) that only builds against OpenSSL
+# >= 4.0 and joins this build solely as an optional path
+# dependency behind vongola's `ech` feature.
+exclude = ["crates/vongola-ech"]
 members = ["crates/vongola"]
 resolver = "2"
 

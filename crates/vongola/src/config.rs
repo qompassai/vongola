@@ -367,9 +367,35 @@ pub enum Profile {
     Lean,
 }
 
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct EchConfig {
+    /// Master switch. False (default): the key file is never
+    /// touched and ECH is not offered.
+    #[serde(default)]
+    pub enabled: bool,
+    /// ECH PEM file (RFC 9934: private key + ECHConfigList).
+    /// Loaded when present; generated for `public_name` and
+    /// written (0600) on first start when absent. Required
+    /// when `enabled`. Consumed only by the ECH startup path
+    /// (src/ech.rs), which exists solely in the OpenSSL 4
+    /// variant build (cargo feature `ech`); every other build
+    /// refuses to start with ECH enabled.
+    #[serde(default)]
+    pub key_file: Option<PathBuf>,
+    /// The cover name clients see in the outer ClientHello and
+    /// the name published inside the ECHConfig. Required when
+    /// `enabled`. A fronting name for this node's listeners,
+    /// not a route.
+    #[serde(default)]
+    pub public_name: String,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct TlsPolicy {
+    #[serde(default)]
+    pub ech: EchConfig,
     #[serde(default = "default_tls_groups")]
     pub groups: Vec<String>,
     /// Only "1.3" is accepted; anything else fails validation.
@@ -385,6 +411,7 @@ fn default_tls_version() -> String { "1.3".to_string() }
 impl Default for TlsPolicy {
     fn default() -> Self {
         TlsPolicy {
+            ech: EchConfig::default(),
             groups: default_tls_groups(),
             min_version: default_tls_version(),
         }
@@ -608,6 +635,37 @@ impl Config {
                 "at least one hybrid post-quantum group is required",
             ));
         }
+        // ECH knob shape, checked in every build (the OpenSSL 4
+        // variant enforces the behavior at startup; other builds
+        // refuse to start with ECH enabled — see main.rs). When
+        // disabled the key path is inert and deliberately left
+        // unchecked: a config must stay loadable on nodes that
+        // do not serve ECH.
+        if self.tls.ech.enabled {
+            if self.tls.ech.public_name.is_empty() {
+                errors.push(ConfigError::new(
+                    "tls.ech_public_name_required",
+                    "tls.ech.public_name",
+                    "public_name is required when ECH is enabled",
+                ));
+            } else if !valid_dns_name(&self.tls.ech.public_name) {
+                errors.push(ConfigError::new(
+                    "tls.ech_public_name_invalid",
+                    "tls.ech.public_name",
+                    "public_name must be a DNS name (LDH letters, digits, '-', '.', '_')",
+                ));
+            }
+            match &self.tls.ech.key_file {
+                Some(path) if !path.as_os_str().is_empty() => {}
+                _ => {
+                    errors.push(ConfigError::new(
+                        "tls.ech_key_file_required",
+                        "tls.ech.key_file",
+                        "key_file is required when ECH is enabled",
+                    ));
+                }
+            }
+        }
         // Tor never-exit rule.
         validate_tor(&self.tor, &mut errors);
         // Routes.
@@ -739,6 +797,20 @@ impl Config {
         }
         best.map(|(route, _)| route)
     }
+}
+
+/// DNS name shape for values that end up inside protocol
+/// structures (mirrors the vongola-ech store's own check):
+/// non-empty, at most 253 bytes, letters/digits/'-' plus '.'
+/// and '_' separators, no leading '.'/'-', no empty labels.
+fn valid_dns_name(name: &str) -> bool {
+    !name.is_empty()
+        && name.len() <= 253
+        && !name.starts_with(['.', '-'])
+        && !name.contains("..")
+        && name
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'.' | b'_'))
 }
 
 fn validate_nat(nat: &NatConfig, field: &str, errors: &mut Vec<ConfigError>) {
@@ -930,6 +1002,42 @@ routes:
     }
 
     #[test]
+    fn adversarial_ech_disabled_ignores_garbage() {
+        // A disabled ECH block must stay inert: nonsense paths
+        // and names validate clean, so a config stays loadable
+        // on nodes and builds that never serve ECH.
+        let text = format!(
+            "{MINIMAL}\ntls: {{ech: {{enabled: false, key_file: \"/nonexistent/garbage.pem\", public_name: \"not a name!!\"}}}}\n"
+        );
+        assert!(Config::parse(&text).is_ok());
+    }
+
+    #[test]
+    fn adversarial_ech_enabled_rejects_bad_public_name() {
+        let text = format!(
+            "{MINIMAL}\ntls: {{ech: {{enabled: true, key_file: \"/tmp/ech.pem\", public_name: \"bad name\"}}}}\n"
+        );
+        let errors = Config::parse(&text).expect_err("bad name must fail");
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.code == "tls.ech_public_name_invalid")
+        );
+    }
+
+    #[test]
+    fn adversarial_ech_enabled_requires_fields() {
+        let text = format!("{MINIMAL}\ntls: {{ech: {{enabled: true}}}}\n");
+        let errors = Config::parse(&text).expect_err("bare enabled must fail");
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.code == "tls.ech_public_name_required")
+        );
+        assert!(errors.iter().any(|e| e.code == "tls.ech_key_file_required"));
+    }
+
+    #[test]
     fn adversarial_exit_relay_rejected() {
         let text = format!("{MINIMAL}\ntor: {{enabled: true, exit_relay: true}}\n");
         let errors = Config::parse(&text).expect_err("exit must fail");
@@ -980,6 +1088,26 @@ routes:
     }
 
     #[test]
+    fn validation_ech_disabled_by_default() {
+        let cfg = Config::parse(MINIMAL).expect("minimal config");
+        assert!(!cfg.tls.ech.enabled);
+        assert!(cfg.tls.ech.key_file.is_none());
+    }
+
+    #[test]
+    fn validation_ech_enabled_well_formed() {
+        // Validation is pure: a well-formed enabled block
+        // parses even though the key file does not exist yet
+        // (startup generates it; see src/ech.rs).
+        let text = format!(
+            "{MINIMAL}\ntls: {{ech: {{enabled: true, key_file: \"/tmp/ech.pem\", public_name: \"cover.example.test\"}}}}\n"
+        );
+        let cfg = Config::parse(&text).expect("well-formed ech block");
+        assert!(cfg.tls.ech.enabled);
+        assert_eq!(cfg.tls.ech.public_name, "cover.example.test");
+    }
+
+    #[test]
     fn validation_minimal_config_parses() {
         let cfg = Config::parse(MINIMAL).expect("minimal config");
         assert_eq!(cfg.routes.len(), 1);
@@ -990,6 +1118,19 @@ routes:
     fn validation_reject_all_exit_policy_accepted() {
         let text = format!("{MINIMAL}\ntor: {{enabled: true, exit_policy: \"reject *:*\"}}\n");
         assert!(Config::parse(&text).is_ok());
+    }
+
+    #[test]
+    fn validation_bundle_hash_stable_ech() {
+        // Deliberate, documented behavior change: the bundle
+        // hash now covers the ECH block, so configs differing
+        // only in ECH settings produce different bundles.
+        let a = Config::parse(MINIMAL).unwrap();
+        let text = format!(
+            "{MINIMAL}\ntls: {{ech: {{enabled: true, key_file: \"/tmp/ech.pem\", public_name: \"cover.example.test\"}}}}\n"
+        );
+        let b = Config::parse(&text).unwrap();
+        assert_ne!(a.bundle_sha256(), b.bundle_sha256());
     }
 
     #[test]

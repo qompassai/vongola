@@ -131,6 +131,20 @@ impl Metrics {
             self.upstream_checks_ok.load(Ordering::Relaxed),
             self.upstream_checks_failed.load(Ordering::Relaxed)
         ));
+        #[cfg(feature = "ech")]
+        {
+            // Accepted ECH handshakes, counted exactly by the
+            // binding crate's status callback. Deliberately no
+            // "rejected" series: server-side, a rejected
+            // attempt is indistinguishable from GREASE by
+            // protocol design (see the vongola-ech status
+            // module docs).
+            let counters = vongola_ech::status_counters();
+            out.push_str(&format!(
+                "# HELP vongola_ech_handshakes_total ECH handshakes accepted (OpenSSL 4 variant builds).\n# TYPE vongola_ech_handshakes_total counter\nvongola_ech_handshakes_total{{result=\"accepted\"}} {}\n",
+                counters.accepted
+            ));
+        }
         for (name, labels, value) in extra_gauges {
             out.push_str(&format!("{name}{{{labels}}} {value}\n"));
         }

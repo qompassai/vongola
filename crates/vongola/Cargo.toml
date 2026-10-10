@@ -35,6 +35,7 @@ base64 = "0.22"
 bytes = "1"
 ed25519-dalek = { version = "2", features = ["rand_core"] }
 flate2 = "1"
+foreign-types-shared = "0.1"
 hmac = "0.12"
 http = "1"
 log = "0.4"
@@ -48,6 +49,14 @@ serde_yaml = "0.9"
 sha2 = "0.10"
 time = "0.3"
 tokio = { version = "1", features = ["io-std", "io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+vongola-ech = { path = "../vongola-ech", optional = true }
+
+[features]
+# ECH (RFC 9849) via the vongola-ech binding crate. Enabled
+# only by the flake's OpenSSL 4 variant: the binding requires
+# OpenSSL >= 4.0 headers, which the default (OpenSSL 3.5)
+# build does not have. See SPEC.md section 16.
+ech = ["dep:vongola-ech"]
 
 [dev-dependencies]
 tempfile = "3"

@@ -239,6 +239,21 @@ pub fn rotate_self_signed(config: &Config, host: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// The name certificate selection must use for this
+/// connection. With ECH (OpenSSL 4 variant builds), an ECH
+/// handshake is bound to its INNER SNI — the outer name is a
+/// cover and deliberately has no certificate — so the inner
+/// name wins whenever the ECH status reports one. Classical
+/// connections: the SNI as sent.
+fn effective_servername(ssl: &pingora::protocols::tls::TlsRef) -> Option<String> {
+    #[cfg(feature = "ech")]
+    if let Some(inner) = crate::ech::inner_servername(ssl) {
+        return Some(inner);
+    }
+    ssl.servername(openssl::ssl::NameType::HOST_NAME)
+        .map(|s| s.to_lowercase())
+}
+
 /// TLS accept callback: exact-SNI certificate selection. Falls
 /// back to the default (first) entry only when the client sent no
 /// SNI at all; a wrong certificate is never served.
@@ -249,9 +264,7 @@ pub struct SniCertSelector {
 #[async_trait::async_trait]
 impl pingora::listeners::TlsAccept for SniCertSelector {
     async fn certificate_callback(&self, ssl: &mut pingora::protocols::tls::TlsRef) {
-        let sni = ssl
-            .servername(openssl::ssl::NameType::HOST_NAME)
-            .map(|s| s.to_lowercase());
+        let sni = effective_servername(ssl);
         let store = match self.store.read() {
             Ok(guard) => guard.clone(),
             Err(_) => return,

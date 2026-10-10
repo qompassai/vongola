@@ -33,6 +33,8 @@ mod cert;
 mod chain;
 mod config;
 mod dashboard;
+#[cfg(feature = "ech")]
+mod ech;
 mod mcp;
 mod metrics;
 mod nat;
@@ -337,6 +339,39 @@ fn cmd_serve(path: PathBuf) {
         state.bundle_sha256
     );
 
+    // ECH (RFC 9849): variant builds only (cargo feature
+    // `ech`, OpenSSL 4). Fail closed: a config that asks for
+    // ECH never silently serves without it — setup errors and
+    // feature-less builds both stop startup.
+    #[cfg(feature = "ech")]
+    let ech_store = if config.tls.ech.enabled {
+        match ech::prepare(&config) {
+            Ok(prepared) => {
+                if let Ok(mut slot) = state.ech.write() {
+                    *slot = Some(prepared.public.clone());
+                }
+                log::info!(
+                    "ECH enabled: public_name={} (publishable config list in <state_dir>/ech/)",
+                    prepared.public.public_name
+                );
+                Some(prepared.store)
+            }
+            Err(message) => {
+                eprintln!("ECH setup failed: {message}");
+                std::process::exit(2);
+            }
+        }
+    } else {
+        None
+    };
+    #[cfg(not(feature = "ech"))]
+    if config.tls.ech.enabled {
+        eprintln!(
+            "tls.ech.enabled is set, but this build has no ECH support: ECH requires the OpenSSL 4 variant build (see SPEC.md section 16)"
+        );
+        std::process::exit(2);
+    }
+
     // Wire the config knobs into Pingora's server configuration:
     // worker_threads bounds each service's runtime, and
     // shutdown_grace_secs caps connection drain on SIGTERM
@@ -372,6 +407,17 @@ fn cmd_serve(path: PathBuf) {
         tls_settings
             .set_groups_list(&config.tls.groups.join(":"))
             .expect("tls groups list");
+        // Attach the ECH store to this listener's SSL_CTX
+        // (OpenSSL deep-copies it; the local store may drop
+        // afterwards). Failure here is startup-fatal: ECH was
+        // explicitly enabled.
+        #[cfg(feature = "ech")]
+        if let Some(store) = &ech_store
+            && let Err(message) = ech::attach(&mut tls_settings, store)
+        {
+            eprintln!("ECH setup failed: {message}");
+            std::process::exit(2);
+        }
         tls_settings.enable_h2();
         service.add_tls_with_settings(&config.listeners.https.bind, None, tls_settings);
         server.add_service(service);
