@@ -70,3 +70,64 @@ HTTP/3: Pingora 0.9's stable server surface is HTTP/1.1 + HTTP/2
 vongola does not claim one.
 
 </details>
+
+<details>
+<summary>Encrypted Client Hello (ECH) — OpenSSL 4 variant only</summary>
+
+The post-quantum handshake above still leaves one thing in
+cleartext: the SNI itself, visible to every on-path observer.
+ECH (RFC 9849) closes that: the client encrypts the real
+ClientHello (true SNI, ALPN) to a key the server publishes in
+DNS, and the outer handshake shows only a cover name.
+
+Vongola implements ECH on the **OpenSSL 4 variant build only**
+(`nix build .#vongola-openssl4`). ECH is new in OpenSSL 4.0 —
+the 3.5 line does not have it, and neither did the Rust
+bindings: the safe binding lives in this tree as the
+dedicated `crates/vongola-ech` crate (the one place `unsafe`
+FFI is allowed), wired behind the `ech` cargo feature. The
+default build does not compile any of it, and refuses —
+exit 2, no silent fallback — if a config enables ECH.
+
+Enable it per deployment (one ECH identity per listener):
+
+```yaml
+tls:
+  ech:
+    enabled: true
+    key_file: /var/lib/vongola/ech/ech.pem
+    public_name: cover.example.test
+```
+
+- First start generates the keypair (default RFC 9849 suite:
+  X25519 / HKDF-SHA256 / AES-128-GCM) and writes it to
+  `key_file` with mode 0600; later starts load it. An
+  unreadable or malformed key file fails startup closed.
+- The value clients need — the base64 ECHConfigList — is
+  written to `<state_dir>/ech/echconfiglist.b64` on every
+  start and shown in the dashboard. **Publishing it is the
+  operator's step:** put it in the `ech=` parameter of each
+  served host's DNS HTTPS (type 65) record. Until that
+  record exists, ECH is on but undiscoverable.
+- Certificate selection uses the decrypted inner name (the
+  public name is a cover and normally has no certificate);
+  classical clients are unaffected — ECH is negotiated, not
+  required, on the server side.
+- Metrics: `vongola_ech_enabled` plus
+  `vongola_ech_handshakes_total{result="accepted"}`. There
+  is no rejected counter on purpose: when decryption of the
+  inner hello fails, OpenSSL deliberately treats the
+  connection as GREASE, so a server cannot distinguish a
+  rejected attempt from GREASE noise — any "rejected"
+  number would be fiction. Rejection is observable where
+  the protocol puts it: the client receives authenticated
+  retry-configs naming the current public name.
+
+End-to-end proof (`scripts/ech-proof.sh`, 19/19): the
+pinned 4.0.3 `s_client` offering the published config gets
+`ECH: success: 1` and the fixture over the ECH connection;
+a stale config is answered with retry-configs; the config
+list is byte-stable across restarts. Full design record:
+SPEC.md section 16.
+
+</details>

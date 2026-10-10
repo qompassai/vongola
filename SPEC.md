@@ -557,3 +557,203 @@ default when (1) the binding lands, or (2) nixpkgs ships
 OpenSSL 4.x itself.
 
 </details>
+
+## 16. ECH binding patch (2026-10-10)
+
+<details>
+<summary>Implemented for the OpenSSL 4 variant: binding crate, fail-closed config, proof 19/19</summary>
+
+Section 15's "smallest next step" is done. The binding
+exists, ECH is wired into vongola behind a fail-closed
+config block, and the end-to-end proof passes against the
+pinned OpenSSL 4.0.3 client. The default (OpenSSL 3.5.8)
+build is untouched: it never compiles the binding crate,
+and it refuses to serve an ECH-enabled config (exit 2)
+rather than silently ignoring it.
+
+### The binding crate: `crates/vongola-ech`
+
+A dedicated shim crate — the ONE place `unsafe` lives in
+this tree (vongola's own crates keep
+`#![forbid(unsafe_code)]`). It is deliberately NOT a
+workspace member (it carries its own `[workspace]`); the
+parent build reaches it only as an optional path dependency
+behind vongola's `ech` cargo feature, which only the flake's
+`vongola-openssl4` package enables. It is styled for
+upstreaming to rust-openssl: the `ffi` module mirrors what
+would land in openssl-sys, the safe modules mirror an
+`openssl::ech` module.
+
+FFI surface (23 functions, transcribed from the built
+4.0.3's `include/openssl/ech.h` — the header, not memory,
+is the contract): `OSSL_ECHSTORE_new`, `_free`,
+`_new_config`, `_set1_key_and_read_pem`, `_read_pem`,
+`_read_echconfiglist`, `_write_pem`, `_get1_info`,
+`_num_entries`, `_num_keys`, `_flush_keys`, `_downselect`;
+`SSL_CTX_set1_echstore`, `SSL_set1_echstore`,
+`SSL_CTX_get1_echstore`, `SSL_get1_echstore`,
+`SSL_ech_get1_status`, `SSL_ech_get1_retry_config`,
+`SSL_CTX_ech_set_callback`, `SSL_ech_set_callback`,
+`SSL_set1_ech_config_list`; plus the BIO/`CRYPTO_free`
+plumbing the PEM paths need. Types: opaque `OSSL_ECHSTORE`,
+and `OSSL_HPKE_SUITE` (`#[repr(C)]`, by value). Constants:
+RFC 9849 version `0xfe0d`, store selectors, status codes.
+A `build.rs` gate refuses to build unless the linked
+OpenSSL reports major version >= 4 AND ships `ech.h` — a
+mis-pointed `OPENSSL_DIR` fails the build with a precise
+message instead of producing link errors or, worse, a
+silent no-ECH binary.
+
+Safe surface: `EchStore::{generate, load_pem,
+load_config_list, config_list, config_list_base64,
+entry_pem, public_pem, entry_info, downselect, flush_keys,
+attach_to_ctx}`, `connection_status`, `retry_config`,
+`install_ctx_status_callback`, `note_status` /
+`status_counters`, and `HpkeSuite::DEFAULT` (X25519 /
+HKDF-SHA256 / AES-128-GCM, the RFC 9849 default suite).
+Every `unsafe` block carries a SAFETY comment stating its
+invariant. Inputs are size-capped (PEM inputs at 1 MiB);
+all OpenSSL failures become typed errors — nothing panics
+across the FFI boundary.
+
+### Empirical findings (each cost a bisect; recorded so nobody pays twice)
+
+1. **`OSSL_ECHSTORE_write_pem` with the ALL selector
+   double-wraps.** Each generated entry's encoding is
+   already a singleton ECHConfigList; `write_pem(ALL)`
+   wraps again in a second length prefix, producing a
+   list whose first "version" reads `0x0045` (the length).
+   `read_echconfiglist` rejects it. The shim assembles the
+   publishable list per entry instead.
+2. **Serialization shape depends on provenance.** A
+   generated entry's ECHCONFIG PEM payload is a singleton
+   list (length prefix + config); a PEM-loaded entry's
+   payload is the bare ECHConfig (no prefix) — the load
+   path flattens. The shim accepts both shapes, each
+   validated against its own length fields; anything else
+   fails closed.
+3. **A freshly generated store does not decrypt.** First
+   start with in-memory generated keys: ECH connections
+   die in signature-algorithm selection (the inner name
+   never becomes visible). The same store reloaded from
+   its persisted PEM works. (OpenSSL's own `sslecho` demo
+   only ever loads from PEM.) vongola's startup therefore
+   generates -> persists (0600) -> reloads, so first start
+   is identical to restart by construction.
+4. **Certificate selection must use the INNER name.** With
+   ECH accepted, Pingora's certificate callback still sees
+   the OUTER (public) name in `SSL_get_servername`; the
+   public name is a cover, usually with no route or
+   certificate. The selector asks the binding for the
+   decrypted inner SNI first and falls back to the sent
+   SNI for classical connections.
+5. **The status callback must return 1.** Any other value
+   is a fatal callback error at ServerHello construction —
+   for EVERY connection on the context, classical included.
+6. **Server-side rejection is unobservable — by design.**
+   When inner-ClientHello decryption fails, OpenSSL folds
+   the connection into the GREASE state
+   (`ssl/ech/ech_local.h`: `OSSL_ECH_IS_GREASE` is set
+   "when decryption failed or GREASE wanted"), so
+   `SSL_ech_get1_status` reports `Grease` for genuine
+   rejections and genuine GREASE alike; the `FailedEch*`
+   codes are client-side only. Metrics therefore count
+   accepted handshakes EXACTLY and offer no rejected
+   series — that number would be GREASE noise wearing a
+   label. Rejection is proven where the protocol makes it
+   visible: at the client, via authenticated retry-configs.
+7. **A strict client aborts a rejected attempt.** The
+   4.0.3 `s_client` treats a supplied config list as
+   required ECH: on rejection it reports
+   `ECH: failed+retry-configs: -105`, lists the retry
+   configs, and aborts with an `ech_required` alert (121).
+   Opportunistic clients continue on the outer name;
+   both behaviors are protocol-correct.
+
+### Config block (fail-closed, like every other knob)
+
+```yaml
+tls:
+  ech:
+    enabled: true            # default: false
+    key_file: /path/ech.pem  # required when enabled
+    public_name: cover.example.test  # required when enabled
+```
+
+Validation runs only when `enabled` is true (a disabled
+block ignores even garbage paths, so configs can be staged
+ahead of the keys); when enabled, `public_name` must be a
+well-formed DNS name and `key_file` a non-empty path, both
+enforced at config load. At serve time: a missing key file
+is generated and persisted 0600; an unreadable or malformed
+one fails startup (exit 2) — there is no fallback to
+non-ECH while claiming ECH. The bundle hash now covers the
+`tls.ech` block (deliberate, test-documented behavior
+change: ECH posture is part of a bundle's identity).
+
+Operator surfaces: the publishable ECHConfigList (base64)
+is written to `<state_dir>/ech/echconfiglist.b64` at every
+start; the dashboard state carries `{enabled, public_name,
+config_list}`; metrics gain `vongola_ech_enabled` and
+`vongola_ech_handshakes_total{result="accepted"}`.
+
+### Proof
+
+`scripts/ech-proof.sh` (loopback, the flake's 4.0.3
+`s_client` as client): **19/19 PASS** — ECH accepted with
+the published config (`ECH: success: 1`, chain verifies,
+fixture served over the ECH connection); config list
+stable across restart and ECH accepted after restart;
+stale config answered with retry-configs naming the
+current public name; the rejected attempt does not move
+the accepted counter; classical `s_client` and `curl`
+handshakes unaffected. With ECH disabled, the existing
+suite stays **smoke 38/0**.
+
+Gates at this state: binding crate tests 17/17; variant
+`cargo test --features ech` 63/63 (51 baseline + 6 config +
+6 ECH wiring); default `cargo test` 57/57 (shim not
+compiled); clippy `-D warnings` and fmt clean on both
+feature sets; IDE gate (rust-analyzer / bacon-ls /
+crates-lsp via the live diver config) 0 errors on all new
+and changed files; `nix build` green for BOTH packages
+(the variant's in-sandbox suite runs with the feature on),
+`nix flake check` all passed; the default binary
+links nixpkgs OpenSSL 3.5.8 and exits 2 on an ECH-enabled
+config.
+
+### What remains operational (not code)
+
+- **DNS publication**: for each served host, publish the
+  contents of `<state_dir>/ech/echconfiglist.b64` as the
+  `ech=` parameter of its HTTPS (type 65) resource record.
+  This is the operator's step and the only one that makes
+  ECH discoverable by real clients; SNI privacy applies
+  from the moment the record propagates.
+- **Key rotation**: ECH keys should rotate on roughly the
+  certificate-renewal cadence. The binding exposes
+  `flush_keys` / `downselect` for pruning; during a
+  rotation, keep the outgoing key in the store marked
+  for-retry until the new DNS record has propagated, then
+  restart with the new key file (or run two stores'
+  worth of entries in one PEM — the load path accepts
+  multi-entry files).
+- **Fleet distribution**: the key file and the published
+  list travel with the config bundle (the bundle hash
+  covers them); every fleet node serving a host must hold
+  the SAME ECH keypair for that host's public name, or
+  clients will be answered with retry-configs by the
+  nodes that cannot decrypt (correct, but a needless
+  round trip).
+- **Not yet**: aarch64 remains declared-but-unbuilt (no
+  ARM builder on primo); ECH is HTTP/3-agnostic here only
+  because vongola's QUIC story is unchanged from section
+  11 — nothing in this patch touches it.
+
+Upstreaming: the binding is small, header-faithful, and
+carries findings (1), (2), and (6) that any consumer of
+this API will hit; it is worth offering to rust-openssl as
+an openssl-sys bindings + `openssl::ech` module PR. That
+submission is a separate decision and has NOT been made.
+
+</details>
