@@ -1,0 +1,1 @@
+{"deny":["rm -rf","git reset --hard","git clean -fd"],"instructions":["AGENTS.md","SPEC.md"],"require_approval":["git push","cargo publish"],"shell":"bash","version":1}
