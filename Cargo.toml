@@ -1,6 +1,6 @@
 # #################################################################
-# /qompassai/vongola/rust-toolchain.toml
-# Qompass AI Rust Toolchain
+# /qompassai/vongola/Cargo.toml
+# Qompass AI Cargo
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Qompass AI
 #
@@ -16,6 +16,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[toolchain]
-channel = "nightly-2026-09-25"
-components = ["clippy", "rust-analyzer", "rust-src", "rustc", "rustfmt"]
+[workspace]
+resolver = "2"
+members = ["crates/plugin_request_id", "crates/plugins_api", "crates/vongola"]
+
+[workspace.package]
+license = "Apache-2.0"
+rust-version = "1.88"
