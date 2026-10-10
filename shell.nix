@@ -1,6 +1,6 @@
 # #################################################################
-# /qompassai/vongola/rustfmt.toml
-# Qompass AI Rustfmt
+# /qompassai/vongola/shell.nix
+# Qompass AI Flake-Compat Shell Shim
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Qompass AI
 #
@@ -15,16 +15,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-brace_style = 'PreferSameLine'
-comment_width = 80
-condense_wildcard_suffixes = true
-edition = '2021'
-fn_single_line = true
-format_code_in_doc_comments = true
-group_imports = 'StdExternalCrate'
-reorder_imports = true
-reorder_impl_items = true
-use_field_init_shorthand = true
-where_single_line = true
-wrap_comments = true
+# Non-flake entry point: lands `nix-shell` users in the same shell
+# flake.nix defines, via flake-compat. The canonical definition is
+# the flake; edit that, not this.
+(import (
+  let
+    lock = builtins.fromJSON (builtins.readFile ./flake.lock);
+  in
+    fetchTarball {
+      url = "https://github.com/edolstra/flake-compat/archive/${lock.nodes.flake-compat.locked.rev}.tar.gz";
+      sha256 = lock.nodes.flake-compat.locked.narHash;
+    }
+) {src = ./.;})
+.shellNix
