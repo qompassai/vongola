@@ -241,11 +241,18 @@ impl ProxyHttp for VongolaProxy {
 
         // Static hosting.
         if route.static_root.is_some() {
-            let accept_gzip = headers_snapshot
-                .get("accept-encoding")
-                .and_then(|v| v.to_str().ok())
-                .map(|v| v.contains("gzip"))
-                .unwrap_or(false);
+            let header_value =
+                |name: &str| headers_snapshot.get(name).and_then(|v| v.to_str().ok());
+            let request = crate::static_site::StaticRequest {
+                accept_gzip: header_value("accept-encoding")
+                    .map(|v| v.contains("gzip"))
+                    .unwrap_or(false),
+                if_modified_since: header_value("if-modified-since"),
+                if_none_match: header_value("if-none-match"),
+                if_range: header_value("if-range"),
+                method: &method,
+                range: header_value("range"),
+            };
             let cache = self
                 .static_caches
                 .get(&route.display_name())
@@ -256,7 +263,7 @@ impl ProxyHttp for VongolaProxy {
                 .static_caches
                 .get(&route.display_name())
                 .unwrap_or(&owned_cache);
-            let response = crate::static_site::serve(&route, cache_ref, &path, accept_gzip);
+            let response = crate::static_site::serve(&route, cache_ref, &path, &request);
             if response.from_cache {
                 self.state
                     .metrics
@@ -269,7 +276,7 @@ impl ProxyHttp for VongolaProxy {
                     .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             }
             ctx.status = response.status;
-            let mut header = ResponseHeader::build(response.status, Some(8))?;
+            let mut header = ResponseHeader::build(response.status, Some(12))?;
             if !response.content_type.is_empty() {
                 header.insert_header("Content-Type", response.content_type.clone())?;
             }
@@ -282,7 +289,22 @@ impl ProxyHttp for VongolaProxy {
                 header.insert_header("Location", location)?;
             }
             header.insert_header("Cache-Control", response.cache_control.clone())?;
-            header.insert_header("Content-Length", response.body.len())?;
+            header.insert_header(
+                "Content-Length",
+                response.content_length.unwrap_or(response.body.len()),
+            )?;
+            if let Some(etag) = &response.etag {
+                header.insert_header("ETag", etag.clone())?;
+            }
+            if let Some(last_modified) = &response.last_modified {
+                header.insert_header("Last-Modified", last_modified.clone())?;
+            }
+            if let Some(content_range) = &response.content_range {
+                header.insert_header("Content-Range", content_range.clone())?;
+            }
+            if response.accept_ranges {
+                header.insert_header("Accept-Ranges", "bytes")?;
+            }
             header.insert_header("X-Request-Id", ctx.request_id.clone())?;
             if response.from_cache {
                 header.insert_header("X-Vongola-Cache", "HIT")?;
