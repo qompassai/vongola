@@ -203,9 +203,19 @@ served), with:
   domain (`@example.com` is rejected even when issuance is
   disabled — carried over from the previous tree's published
   validation contract).
-- Full ACME client completion is staged: the challenge responder,
-  account-key storage, validation, and config surface are part of
-  this rewrite; the order/finalize client is accounted in §13.
+- The ACME order/finalize client is implemented (`acme.rs`):
+  account registration with a persisted P-256 account key,
+  new-order, authorization fetch, HTTP-01 fulfillment through
+  the challenge store, finalize, and chain download; the issued
+  chain is verified against the requested names and the CSR key
+  before it is persisted (0600 key) and hot-swapped into the
+  certificate store without dropping the listener. Renewal runs
+  when any name in a route group is unserved, self-signed, or
+  within 30 days of expiry; persisted certificates are preloaded
+  at startup. Bounded retries with backoff, bad-nonce recovery,
+  and single-flight renewal; every failure leaves the previous
+  certificate serving. The flow is proven end-to-end against a
+  local Pebble test CA in the build environment.
 
 </details>
 
@@ -436,10 +446,9 @@ no consumers in the published docs; a plugin ABI deserves its
 own design, not a carried skeleton); disk response cache
 (in-memory cache for static assets covers the hosting contract;
 proxied-response caching returns with a dedicated design);
-full ACME order/finalize client (challenge surface wired; no
-publicly reachable test endpoint exists in the build
-environment, and an untested issuance client is worse than an
-honest staged surface).
+full ACME order/finalize client (delivered with this
+commission: implemented and proven against a local Pebble test
+CA; see §7).
 
 Net-new (this commission): PQ hybrid TLS (§6), MCP operator
 server (§11), A2A agent card (§11), NAT traversal (§10), Tor

@@ -37,6 +37,9 @@ pub struct StaticResponse {
     pub content_encoding: Option<String>,
     pub content_type: String,
     pub from_cache: bool,
+    /// Redirect target for canonicalization responses
+    /// (directory without trailing slash); None otherwise.
+    pub location: Option<String>,
     pub status: u16,
 }
 
@@ -99,7 +102,9 @@ impl StaticCache {
 
 /// Resolve a request path under the root. Returns None for any
 /// path that escapes the root, names a dotfile, or is not a file.
-pub fn resolve_under_root(root: &Path, url_path: &str) -> Option<PathBuf> {
+/// The filesystem candidate for a request path, before any
+/// index resolution: root-joined, traversal- and dotfile-safe.
+fn candidate_path(root: &Path, url_path: &str) -> Option<PathBuf> {
     let decoded = percent_decode(url_path);
     let mut relative = PathBuf::new();
     for component in Path::new(&decoded).components() {
@@ -115,7 +120,11 @@ pub fn resolve_under_root(root: &Path, url_path: &str) -> Option<PathBuf> {
             Component::ParentDir | Component::Prefix(_) => return None,
         }
     }
-    let candidate = root.join(relative);
+    Some(root.join(relative))
+}
+
+pub fn resolve_under_root(root: &Path, url_path: &str) -> Option<PathBuf> {
+    let candidate = candidate_path(root, url_path)?;
     if candidate.is_dir() {
         let index = candidate.join("index.html");
         if index.is_file() {
@@ -150,16 +159,16 @@ fn percent_decode(text: &str) -> String {
 
 pub fn content_type_for(path: &Path) -> &'static str {
     match path.extension().and_then(|e| e.to_str()) {
-        Some("css") => "text/css",
+        Some("css") => "text/css; charset=utf-8",
         Some("gif") => "image/gif",
-        Some("html") => "text/html",
+        Some("html") => "text/html; charset=utf-8",
         Some("ico") => "image/x-icon",
         Some("jpeg" | "jpg") => "image/jpeg",
-        Some("js") => "text/javascript",
+        Some("js") => "text/javascript; charset=utf-8",
         Some("json") => "application/json",
         Some("png") => "image/png",
         Some("svg") => "image/svg+xml",
-        Some("txt") => "text/plain",
+        Some("txt") => "text/plain; charset=utf-8",
         Some("wasm") => "application/wasm",
         Some("webp") => "image/webp",
         Some("woff2") => "font/woff2",
@@ -207,6 +216,25 @@ pub fn serve(
     accept_gzip: bool,
 ) -> StaticResponse {
     let root = route.static_root.clone().unwrap_or_default();
+    // Directory canonicalization: a directory holding an index
+    // document is addressed with a trailing slash; redirect
+    // there (308), like the reference file server, so relative
+    // references resolve against the directory.
+    if !url_path.ends_with('/')
+        && let Some(candidate) = candidate_path(&root, url_path)
+        && candidate.is_dir()
+        && candidate.join("index.html").is_file()
+    {
+        return StaticResponse {
+            body: Vec::new(),
+            cache_control: "no-store".to_string(),
+            content_encoding: None,
+            content_type: "text/html; charset=utf-8".to_string(),
+            from_cache: false,
+            location: Some(format!("{url_path}/")),
+            status: 308,
+        };
+    }
     let resolved = resolve_under_root(&root, url_path).or_else(|| {
         route.spa_fallback.as_ref().and_then(|fallback| {
             let candidate = root.join(fallback);
@@ -219,11 +247,12 @@ pub fn serve(
     });
     let Some(path) = resolved else {
         return StaticResponse {
-            body: b"not found\n".to_vec(),
+            body: Vec::new(),
             cache_control: "no-store".to_string(),
             content_encoding: None,
-            content_type: "text/plain".to_string(),
+            content_type: String::new(),
             from_cache: false,
+            location: None,
             status: 404,
         };
     };
@@ -253,8 +282,9 @@ pub fn serve(
                         body: b"read error\n".to_vec(),
                         cache_control: "no-store".to_string(),
                         content_encoding: None,
-                        content_type: "text/plain".to_string(),
+                        content_type: "text/plain; charset=utf-8".to_string(),
                         from_cache: false,
+                        location: None,
                         status: 500,
                     };
                 }
@@ -268,8 +298,9 @@ pub fn serve(
                     body: b"read error\n".to_vec(),
                     cache_control: "no-store".to_string(),
                     content_encoding: None,
-                    content_type: "text/plain".to_string(),
+                    content_type: "text/plain; charset=utf-8".to_string(),
                     from_cache: false,
+                    location: None,
                     status: 500,
                 };
             }
@@ -289,6 +320,7 @@ pub fn serve(
         content_encoding,
         content_type,
         from_cache,
+        location: None,
         status: 200,
     }
 }
@@ -317,6 +349,49 @@ mod tests {
         assert!(resolve_under_root(dir.path(), "/../secret.txt").is_none());
         assert!(resolve_under_root(dir.path(), "/%2e%2e/secret.txt").is_none());
         assert!(resolve_under_root(dir.path(), "/.git/config").is_none());
+    }
+
+    #[test]
+    fn validation_directory_redirect_and_charset() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir(dir.path().join("sub")).unwrap();
+        std::fs::write(dir.path().join("sub/index.html"), "<h1>sub</h1>").unwrap();
+        std::fs::write(dir.path().join("index.html"), "<h1>root</h1>").unwrap();
+        let route = route_for(dir.path());
+        let cache = StaticCache::new();
+        let redirect = serve(&route, &cache, "/sub", false);
+        assert_eq!(redirect.status, 308);
+        assert_eq!(redirect.location.as_deref(), Some("/sub/"));
+        let inside = serve(&route, &cache, "/sub/", false);
+        assert_eq!(inside.status, 200);
+        assert_eq!(inside.content_type, "text/html; charset=utf-8");
+        let root = serve(&route, &cache, "/", false);
+        assert_eq!(root.status, 200);
+        assert!(root.location.is_none());
+    }
+
+    #[test]
+    fn validation_not_found_has_empty_body() {
+        let dir = tempfile::tempdir().unwrap();
+        let route = route_for(dir.path());
+        let cache = StaticCache::new();
+        let missing = serve(&route, &cache, "/nope", false);
+        assert_eq!(missing.status, 404);
+        assert!(missing.body.is_empty());
+    }
+
+    #[test]
+    fn adversarial_directory_without_index_is_not_redirected() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir(dir.path().join("bare")).unwrap();
+        let route = route_for(dir.path());
+        let cache = StaticCache::new();
+        let response = serve(&route, &cache, "/bare", false);
+        assert_eq!(response.status, 404);
+        assert!(response.location.is_none());
+        let traversal = serve(&route, &cache, "/../bare", false);
+        assert_eq!(traversal.status, 404);
+        assert!(traversal.location.is_none());
     }
 
     #[test]

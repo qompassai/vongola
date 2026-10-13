@@ -257,8 +257,13 @@ impl ServeHttp for RedirectApp {
             .unwrap_or("4433")
             .to_string();
         let host_name = host_header.split(':').next().unwrap_or("localhost");
+        let authority = if https_port == "443" {
+            host_name.to_string()
+        } else {
+            format!("{host_name}:{https_port}")
+        };
         let location = format!(
-            "https://{host_name}:{https_port}{}",
+            "https://{authority}{}",
             uri.path_and_query().map(|pq| pq.as_str()).unwrap_or(path)
         );
         let mut reply = response(StatusCode::PERMANENT_REDIRECT, "text/plain", Vec::new());

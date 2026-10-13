@@ -94,12 +94,20 @@ impl Default for A2aConfig {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct AcmeConfig {
+    /// Extra trust root (PEM) for the CA connection, e.g. a
+    /// test CA's root certificate. Production leaves this unset.
+    #[serde(default)]
+    pub ca_root_pem: Option<PathBuf>,
     #[serde(default = "default_acme_directory")]
     pub directory_url: String,
     #[serde(default)]
     pub email: String,
     #[serde(default)]
     pub enabled: bool,
+    /// Skip TLS verification toward the CA. Validation refuses
+    /// this unless the directory host is loopback: test-only.
+    #[serde(default)]
+    pub insecure_skip_verify: bool,
 }
 
 fn default_acme_directory() -> String {
@@ -109,9 +117,11 @@ fn default_acme_directory() -> String {
 impl Default for AcmeConfig {
     fn default() -> Self {
         AcmeConfig {
+            ca_root_pem: None,
             directory_url: default_acme_directory(),
             email: String::new(),
             enabled: false,
+            insecure_skip_verify: false,
         }
     }
 }
@@ -314,6 +324,14 @@ pub struct Route {
     /// Ordered egress proxy chain; empty means direct.
     #[serde(default)]
     pub chain: Vec<ChainHop>,
+    /// Content-Security-Policy value emitted with the security
+    /// header set when `security_headers` is on. The policy is
+    /// site configuration (it pins, for example, the sha256
+    /// hashes of a framework's inline bootstrap scripts), so it
+    /// is carried verbatim from config, never computed. None
+    /// emits no CSP header.
+    #[serde(default)]
+    pub content_security_policy: Option<String>,
     pub host: String,
     #[serde(default = "default_max_body")]
     pub max_body_bytes: u64,
@@ -570,6 +588,30 @@ impl Config {
                     "acme.email_placeholder",
                     "lets_encrypt.email",
                     "placeholder @example.com email is never accepted",
+                ));
+            }
+        }
+        // ACME transport-security contract (checked when enabled).
+        if self.lets_encrypt.enabled {
+            let url = &self.lets_encrypt.directory_url;
+            let host = url
+                .split("://")
+                .nth(1)
+                .and_then(|rest| rest.split(['/', ':']).next())
+                .unwrap_or("");
+            let loopback = host == "localhost" || host == "[::1]" || host.starts_with("127.");
+            if !url.starts_with("https://") && !loopback {
+                errors.push(ConfigError::new(
+                    "acme.directory_not_secure",
+                    "lets_encrypt.directory_url",
+                    "the ACME directory must be https (loopback http is for test CAs only)",
+                ));
+            }
+            if self.lets_encrypt.insecure_skip_verify && !loopback {
+                errors.push(ConfigError::new(
+                    "acme.insecure_forbidden",
+                    "lets_encrypt.insecure_skip_verify",
+                    "insecure_skip_verify is refused for non-loopback directories",
                 ));
             }
         }

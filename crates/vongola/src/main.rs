@@ -27,6 +27,7 @@
 //! credential redaction before it is written.
 
 mod a2a;
+mod acme;
 mod admin;
 mod auth;
 mod cert;
@@ -137,6 +138,16 @@ impl pingora::services::background::BackgroundService for BackgroundTasks {
                 upstream::health_check_loop(state, std::time::Duration::from_secs(5)).await;
             })
         };
+        // ACME renewal driver: runs only when lets_encrypt is
+        // enabled in the config snapshot at startup.
+        let acme_task = {
+            let state = state.clone();
+            tokio::spawn(async move {
+                if state.config_snapshot().lets_encrypt.enabled {
+                    acme::renewal_loop(state).await;
+                }
+            })
+        };
         // Tor onion publication: retried until the daemon
         // accepts us (it may still be starting), then done.
         // Status is recorded in shared state on every attempt.
@@ -196,6 +207,7 @@ impl pingora::services::background::BackgroundService for BackgroundTasks {
             })
         };
         let _ = shutdown.changed().await;
+        acme_task.abort();
         health.abort();
         tor_task.abort();
         discovery.abort();
@@ -303,13 +315,16 @@ fn load_or_exit(path: &Path) -> Config {
 }
 
 fn build_state(config: Config, path: PathBuf) -> Arc<State> {
-    let certs = match CertStore::build(&config) {
+    let mut certs = match CertStore::build(&config) {
         Ok(store) => store,
         Err(message) => {
             eprintln!("certificate store failed: {message}");
             std::process::exit(2);
         }
     };
+    // Fold in certificates persisted by earlier ACME runs so a
+    // restart serves the real certificate immediately.
+    acme::preload_entries(&config.state_dir, &mut certs);
     State::new(config, path, certs)
 }
 
