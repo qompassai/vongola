@@ -19,7 +19,8 @@
 
 //! Static site serving for hosting-profile routes: safe path
 //! resolution under a root, cache rules (fingerprinted assets are
-//! immutable, HTML is no-cache), gzip for text types, and a
+//! immutable, HTML is no-cache, downloads under `/files/`
+//! revalidate on every use), gzip for text types, and a
 //! bounded in-memory cache. Path traversal is impossible by
 //! construction: the resolved path must stay under the root.
 //! File responses carry RFC 9110 validators (a strong content
@@ -249,9 +250,17 @@ fn is_fingerprinted(file_name: &str) -> bool {
     })
 }
 
-pub fn cache_control_for(route: &Route, path: &Path) -> String {
+/// The Cache-Control value for a served file. Downloads under
+/// `/files/` are `public, no-cache`: clients may store them but
+/// must revalidate before reuse, so a replaced file (a CV, a
+/// release artifact) is picked up on the next view instead of
+/// being served stale for the general max-age window.
+/// Revalidation is cheap: the validators below answer 304.
+pub fn cache_control_for(route: &Route, path: &Path, url_path: &str) -> String {
     let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-    if path.extension().is_some_and(|e| e == "html") {
+    if url_path.starts_with("/files/") {
+        "public, no-cache".to_string()
+    } else if path.extension().is_some_and(|e| e == "html") {
         "no-cache".to_string()
     } else if is_fingerprinted(name) {
         format!(
@@ -320,7 +329,7 @@ pub fn serve(
         return bare_response(404, "no-store", String::new(), Vec::new());
     };
     let content_type = content_type_for(&path).to_string();
-    let cache_control = cache_control_for(route, &path);
+    let cache_control = cache_control_for(route, &path, url_path);
     let modified = std::fs::metadata(&path)
         .and_then(|meta| meta.modified())
         .ok();
@@ -1142,6 +1151,65 @@ mod tests {
         assert_eq!(not_modified.status, 304);
         assert!(not_modified.body.is_empty());
         assert_eq!(not_modified.content_type, first.content_type);
+    }
+
+    #[test]
+    fn validation_files_path_is_public_no_cache() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir(dir.path().join("files")).unwrap();
+        std::fs::write(dir.path().join("files/doc.pdf"), b"%PDF-1.4 fake").unwrap();
+        let route = route_for(dir.path());
+        let cache = StaticCache::new();
+        let response = serve(&route, &cache, "/files/doc.pdf", &plain_get());
+        assert_eq!(response.status, 200);
+        assert_eq!(response.content_type, "application/pdf");
+        assert_eq!(response.cache_control, "public, no-cache");
+    }
+
+    #[test]
+    fn validation_other_paths_keep_max_age() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("hello.txt"), "hello validators").unwrap();
+        let route = route_for(dir.path());
+        let cache = StaticCache::new();
+        let response = serve(&route, &cache, "/hello.txt", &plain_get());
+        assert_eq!(response.status, 200);
+        assert_eq!(response.cache_control, "public, max-age=3600");
+    }
+
+    #[test]
+    fn validation_files_revalidation_carries_content_type() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir(dir.path().join("files")).unwrap();
+        std::fs::write(dir.path().join("files/doc.pdf"), b"%PDF-1.4 fake").unwrap();
+        let route = route_for(dir.path());
+        let cache = StaticCache::new();
+        let first = serve(&route, &cache, "/files/doc.pdf", &plain_get());
+        assert_eq!(first.status, 200);
+        let etag = first.etag.clone().unwrap();
+        let mut request = plain_get();
+        request.if_none_match = Some(etag.as_str());
+        let second = serve(&route, &cache, "/files/doc.pdf", &request);
+        assert_eq!(second.status, 304);
+        assert!(second.body.is_empty());
+        assert_eq!(second.content_type, "application/pdf");
+        assert_eq!(second.cache_control, "public, no-cache");
+    }
+
+    #[test]
+    fn adversarial_files_lookalike_paths_keep_max_age() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir(dir.path().join("filesx")).unwrap();
+        std::fs::write(dir.path().join("filesx/doc.pdf"), b"%PDF-1.4 fake").unwrap();
+        std::fs::create_dir_all(dir.path().join("other/files")).unwrap();
+        std::fs::write(dir.path().join("other/files/doc.pdf"), b"%PDF-1.4 fake").unwrap();
+        let route = route_for(dir.path());
+        let cache = StaticCache::new();
+        for url in ["/filesx/doc.pdf", "/other/files/doc.pdf"] {
+            let response = serve(&route, &cache, url, &plain_get());
+            assert_eq!(response.status, 200);
+            assert_eq!(response.cache_control, "public, max-age=3600");
+        }
     }
 
     #[test]
