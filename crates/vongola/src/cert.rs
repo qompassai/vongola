@@ -31,6 +31,7 @@ use pingora::tls::x509::X509;
 
 use crate::config::Config;
 
+#[derive(Clone)]
 pub struct CertEntry {
     pub cert_pem: Vec<u8>,
     pub days_until_expiry: f64,
@@ -97,12 +98,23 @@ impl CertStore {
             .collect()
     }
 
-    /// Parse PEM into an openssl cert + key pair for the TLS
-    /// accept callback.
-    pub fn parsed(&self, entry: &CertEntry) -> Option<(X509, PKey<openssl::pkey::Private>)> {
-        let cert = X509::from_pem(&entry.cert_pem).ok()?;
+    /// Parse PEM into the leaf certificate, the remaining
+    /// chain certificates in PEM order, and the key, for the
+    /// TLS accept callback. Serving the leaf alone leaves
+    /// strict clients unable to build a path to the root, so
+    /// the full chain travels with every entry.
+    pub fn parsed(
+        &self,
+        entry: &CertEntry,
+    ) -> Option<(X509, Vec<X509>, PKey<openssl::pkey::Private>)> {
+        let stack = X509::stack_from_pem(&entry.cert_pem).ok()?;
+        let mut certs: Vec<X509> = stack.iter().map(|cert| cert.to_owned()).collect();
+        if certs.is_empty() {
+            return None;
+        }
+        let leaf = certs.remove(0);
         let key = PKey::private_key_from_pem(&entry.key_pem).ok()?;
-        Some((cert, key))
+        Some((leaf, certs, key))
     }
 }
 
@@ -119,7 +131,7 @@ fn load_entry(
     entry_from_pem(host, cert_pem, key_pem, self_signed)
 }
 
-fn entry_from_pem(
+pub(crate) fn entry_from_pem(
     host: &str,
     cert_pem: Vec<u8>,
     key_pem: Vec<u8>,
@@ -191,7 +203,7 @@ fn time_plus_days(days: i64) -> time::OffsetDateTime {
 }
 
 #[cfg(unix)]
-fn write_key_0600(path: &Path, bytes: &[u8]) -> Result<(), String> {
+pub(crate) fn write_key_0600(path: &Path, bytes: &[u8]) -> Result<(), String> {
     use std::io::Write;
     use std::os::unix::fs::OpenOptionsExt;
     let mut file = std::fs::OpenOptions::new()
@@ -206,7 +218,7 @@ fn write_key_0600(path: &Path, bytes: &[u8]) -> Result<(), String> {
 }
 
 #[cfg(not(unix))]
-fn write_key_0600(path: &Path, bytes: &[u8]) -> Result<(), String> {
+pub(crate) fn write_key_0600(path: &Path, bytes: &[u8]) -> Result<(), String> {
     std::fs::write(path, bytes).map_err(|e| format!("write key {:?}: {e}", path))
 }
 
@@ -278,9 +290,12 @@ impl pingora::listeners::TlsAccept for SniCertSelector {
             // the handshake to fail rather than serve a wrong cert.
             return;
         };
-        if let Some((cert, key)) = store.parsed(entry) {
+        if let Some((cert, chain, key)) = store.parsed(entry) {
             let _ = pingora::tls::ext::ssl_use_certificate(ssl, &cert);
             let _ = pingora::tls::ext::ssl_use_private_key(ssl, &key);
+            for extra in &chain {
+                let _ = pingora::tls::ext::ssl_add_chain_cert(ssl, extra);
+            }
         }
     }
 }
@@ -333,6 +348,35 @@ mod tests {
             first.fingerprint_sha256,
             "existing pair must be reused"
         );
+    }
+
+    #[test]
+    fn validation_parsed_includes_full_chain() {
+        let dir = tempfile::tempdir().unwrap();
+        let config: Config = serde_yaml::from_str(&format!(
+            "listeners:\n  admin: {{bind: \"127.0.0.1:9091\"}}\n  http: {{bind: \"0.0.0.0:8080\"}}\n  https: {{bind: \"0.0.0.0:4433\"}}\nstate_dir: \"{}\"\nroutes: []",
+            dir.path().to_string_lossy()
+        ))
+        .unwrap();
+        let leaf = self_signed_entry(&config, "leaf.test").unwrap();
+        let issuer = self_signed_entry(&config, "issuer.test").unwrap();
+        let mut bundle = leaf.cert_pem.clone();
+        bundle.extend_from_slice(&issuer.cert_pem);
+        let entry = entry_from_pem("leaf.test", bundle, leaf.key_pem.clone(), false).unwrap();
+        let store = CertStore {
+            entries: BTreeMap::new(),
+        };
+        let (cert, chain, _key) = store.parsed(&entry).expect("parsed entry");
+        let hex = |cert: &X509| {
+            cert.digest(openssl::hash::MessageDigest::sha256())
+                .unwrap()
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect::<String>()
+        };
+        assert_eq!(hex(&cert), leaf.fingerprint_sha256, "leaf must come first");
+        assert_eq!(chain.len(), 1, "one chain certificate must follow");
+        assert_eq!(hex(&chain[0]), issuer.fingerprint_sha256);
     }
 
     #[test]

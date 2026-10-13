@@ -155,7 +155,9 @@ impl ProxyHttp for VongolaProxy {
                     .map(|pq| pq.as_str())
                     .unwrap_or(&path)
             );
-            let mut header = ResponseHeader::build(308, Some(2))?;
+            // 301, matching the reference edge's permanent
+            // www redirect exactly.
+            let mut header = ResponseHeader::build(301, Some(2))?;
             header.insert_header("Location", location)?;
             header.insert_header("X-Request-Id", ctx.request_id.clone())?;
             session
@@ -239,11 +241,18 @@ impl ProxyHttp for VongolaProxy {
 
         // Static hosting.
         if route.static_root.is_some() {
-            let accept_gzip = headers_snapshot
-                .get("accept-encoding")
-                .and_then(|v| v.to_str().ok())
-                .map(|v| v.contains("gzip"))
-                .unwrap_or(false);
+            let header_value =
+                |name: &str| headers_snapshot.get(name).and_then(|v| v.to_str().ok());
+            let request = crate::static_site::StaticRequest {
+                accept_gzip: header_value("accept-encoding")
+                    .map(|v| v.contains("gzip"))
+                    .unwrap_or(false),
+                if_modified_since: header_value("if-modified-since"),
+                if_none_match: header_value("if-none-match"),
+                if_range: header_value("if-range"),
+                method: &method,
+                range: header_value("range"),
+            };
             let cache = self
                 .static_caches
                 .get(&route.display_name())
@@ -254,7 +263,7 @@ impl ProxyHttp for VongolaProxy {
                 .static_caches
                 .get(&route.display_name())
                 .unwrap_or(&owned_cache);
-            let response = crate::static_site::serve(&route, cache_ref, &path, accept_gzip);
+            let response = crate::static_site::serve(&route, cache_ref, &path, &request);
             if response.from_cache {
                 self.state
                     .metrics
@@ -267,10 +276,35 @@ impl ProxyHttp for VongolaProxy {
                     .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             }
             ctx.status = response.status;
-            let mut header = ResponseHeader::build(response.status, Some(6))?;
-            header.insert_header("Content-Type", response.content_type.clone())?;
+            let mut header = ResponseHeader::build(response.status, Some(12))?;
+            if !response.content_type.is_empty() {
+                header.insert_header("Content-Type", response.content_type.clone())?;
+            }
+            if let Some(location) = &response.location {
+                let location = if query.is_empty() {
+                    location.clone()
+                } else {
+                    format!("{location}?{query}")
+                };
+                header.insert_header("Location", location)?;
+            }
             header.insert_header("Cache-Control", response.cache_control.clone())?;
-            header.insert_header("Content-Length", response.body.len())?;
+            header.insert_header(
+                "Content-Length",
+                response.content_length.unwrap_or(response.body.len()),
+            )?;
+            if let Some(etag) = &response.etag {
+                header.insert_header("ETag", etag.clone())?;
+            }
+            if let Some(last_modified) = &response.last_modified {
+                header.insert_header("Last-Modified", last_modified.clone())?;
+            }
+            if let Some(content_range) = &response.content_range {
+                header.insert_header("Content-Range", content_range.clone())?;
+            }
+            if response.accept_ranges {
+                header.insert_header("Accept-Ranges", "bytes")?;
+            }
             header.insert_header("X-Request-Id", ctx.request_id.clone())?;
             if response.from_cache {
                 header.insert_header("X-Vongola-Cache", "HIT")?;
@@ -281,7 +315,7 @@ impl ProxyHttp for VongolaProxy {
                 header.insert_header("Content-Encoding", encoding.clone())?;
             }
             if route.security_headers {
-                insert_security_headers(&mut header)?;
+                insert_security_headers(&mut header, route.content_security_policy.as_deref())?;
             }
             session
                 .write_response_header(Box::new(header), false)
@@ -344,7 +378,10 @@ impl ProxyHttp for VongolaProxy {
                     header.insert_header("Content-Length", upstream_body.len())?;
                     header.insert_header("X-Request-Id", ctx.request_id.clone())?;
                     if route.security_headers {
-                        insert_security_headers(&mut header)?;
+                        insert_security_headers(
+                            &mut header,
+                            route.content_security_policy.as_deref(),
+                        )?;
                     }
                     session
                         .write_response_header(Box::new(header), false)
@@ -435,7 +472,7 @@ impl ProxyHttp for VongolaProxy {
             .find(|r| r.display_name() == ctx.route_name)
             && route.security_headers
         {
-            insert_security_headers(upstream_response)?;
+            insert_security_headers(upstream_response, route.content_security_policy.as_deref())?;
         }
         Ok(())
     }
@@ -478,11 +515,31 @@ impl ProxyHttp for VongolaProxy {
     }
 }
 
-fn insert_security_headers(header: &mut ResponseHeader) -> Result<()> {
+/// Permissions-Policy value for the hosting security header
+/// set: every powerful feature denied.
+const PERMISSIONS_POLICY: &str =
+    "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()";
+
+/// Emit the hosting security header set (SPEC: parity with the
+/// reference edge configuration). Insert replaces, so an
+/// upstream's own values never survive next to ours; the Server
+/// header is suppressed entirely. The CSP value is site config,
+/// passed verbatim; None emits no CSP header.
+fn insert_security_headers(
+    header: &mut ResponseHeader,
+    content_security_policy: Option<&str>,
+) -> Result<()> {
+    header.remove_header("Server");
+    if let Some(policy) = content_security_policy {
+        header.insert_header("Content-Security-Policy", policy)?;
+    }
+    header.insert_header("Cross-Origin-Opener-Policy", "same-origin")?;
+    header.insert_header("Cross-Origin-Resource-Policy", "same-origin")?;
+    header.insert_header("Permissions-Policy", PERMISSIONS_POLICY)?;
     header.insert_header("Referrer-Policy", "strict-origin-when-cross-origin")?;
     header.insert_header(
         "Strict-Transport-Security",
-        "max-age=63072000; includeSubDomains",
+        "max-age=31536000; includeSubDomains",
     )?;
     header.insert_header("X-Content-Type-Options", "nosniff")?;
     header.insert_header("X-Frame-Options", "DENY")?;
@@ -681,4 +738,96 @@ fn percent_decode(text: &str) -> String {
         i += 1;
     }
     String::from_utf8_lossy(&out).into_owned()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn validation_security_header_set_normative() {
+        let csp = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; object-src 'none'";
+        let mut header = ResponseHeader::build(200, Some(9)).unwrap();
+        insert_security_headers(&mut header, Some(csp)).unwrap();
+        let get = |name: &str| {
+            header
+                .headers
+                .get(name)
+                .map(|v| v.to_str().unwrap().to_string())
+        };
+        assert_eq!(get("content-security-policy").as_deref(), Some(csp));
+        assert_eq!(
+            get("cross-origin-opener-policy").as_deref(),
+            Some("same-origin")
+        );
+        assert_eq!(
+            get("cross-origin-resource-policy").as_deref(),
+            Some("same-origin")
+        );
+        assert_eq!(
+            get("permissions-policy").as_deref(),
+            Some(
+                "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+            )
+        );
+        assert_eq!(
+            get("referrer-policy").as_deref(),
+            Some("strict-origin-when-cross-origin")
+        );
+        assert_eq!(
+            get("strict-transport-security").as_deref(),
+            Some("max-age=31536000; includeSubDomains")
+        );
+        assert_eq!(get("x-content-type-options").as_deref(), Some("nosniff"));
+        assert_eq!(get("x-frame-options").as_deref(), Some("DENY"));
+        assert!(get("server").is_none());
+    }
+
+    #[test]
+    fn validation_security_headers_without_csp() {
+        let mut header = ResponseHeader::build(200, Some(8)).unwrap();
+        insert_security_headers(&mut header, None).unwrap();
+        assert!(header.headers.get("content-security-policy").is_none());
+        assert_eq!(
+            header
+                .headers
+                .get("x-frame-options")
+                .map(|v| v.to_str().unwrap()),
+            Some("DENY")
+        );
+    }
+
+    #[test]
+    fn adversarial_security_headers_replace_conflicts() {
+        let mut header = ResponseHeader::build(200, Some(9)).unwrap();
+        header
+            .insert_header("X-Frame-Options", "SAMEORIGIN")
+            .unwrap();
+        header
+            .insert_header("Strict-Transport-Security", "max-age=1")
+            .unwrap();
+        header
+            .insert_header("Content-Security-Policy", "default-src *")
+            .unwrap();
+        header.insert_header("Server", "Caddy").unwrap();
+        insert_security_headers(&mut header, Some("default-src 'self'")).unwrap();
+        let all = |name: &str| header.headers.get_all(name).iter().count();
+        assert_eq!(all("x-frame-options"), 1);
+        assert_eq!(all("content-security-policy"), 1);
+        assert_eq!(
+            header
+                .headers
+                .get("content-security-policy")
+                .map(|v| v.to_str().unwrap()),
+            Some("default-src 'self'")
+        );
+        assert_eq!(
+            header
+                .headers
+                .get("strict-transport-security")
+                .map(|v| v.to_str().unwrap()),
+            Some("max-age=31536000; includeSubDomains")
+        );
+        assert!(header.headers.get("server").is_none());
+    }
 }
