@@ -422,7 +422,13 @@ fn file_response(request: &StaticRequest<'_>, file: FileContext) -> StaticRespon
                 content_encoding: None,
                 content_length: Some(representation.len()),
                 content_range: None,
-                content_type: String::new(),
+                // RFC 9110 section 15.4.5: a 304 carries the
+                // Content-Type the corresponding 200 would have
+                // carried. Omitting it strands a cache entry that
+                // was stored under a stale type: every successful
+                // revalidation refreshes the stale type instead of
+                // correcting it.
+                content_type: file.content_type,
                 etag: Some(etag),
                 from_cache: file.from_cache,
                 last_modified,
@@ -1094,6 +1100,48 @@ mod tests {
         assert_eq!(response.status, 200);
         assert_eq!(response.content_type, "application/pdf");
         assert_eq!(response.body, b"%PDF-1.4 fake");
+    }
+
+    #[test]
+    fn validation_pdf_not_modified_carries_content_type() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("doc.pdf"), b"%PDF-1.4 fake").unwrap();
+        let route = route_for(dir.path());
+        let cache = StaticCache::new();
+        let first = serve(&route, &cache, "/doc.pdf", &plain_get());
+        assert_eq!(first.status, 200);
+        assert_eq!(first.content_type, "application/pdf");
+        let etag = first.etag.clone().unwrap();
+        let mut request = plain_get();
+        request.if_none_match = Some(etag.as_str());
+        let second = serve(&route, &cache, "/doc.pdf", &request);
+        assert_eq!(second.status, 304);
+        assert!(second.body.is_empty());
+        // RFC 9110 section 15.4.5: the 304 carries the
+        // Content-Type the 200 carried, so a cache entry stored
+        // under a stale type is corrected on revalidation
+        // instead of being refreshed with the stale type.
+        assert_eq!(second.content_type, first.content_type);
+        assert_eq!(second.content_type, "application/pdf");
+    }
+
+    #[test]
+    fn validation_if_modified_since_carries_content_type() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("hello.txt");
+        std::fs::write(&path, "hello validators").unwrap();
+        let route = route_for(dir.path());
+        let cache = StaticCache::new();
+        let first = serve(&route, &cache, "/hello.txt", &plain_get());
+        assert_eq!(first.status, 200);
+        let mtime = std::fs::metadata(&path).unwrap().modified().unwrap();
+        let stamp = format_http_date(mtime);
+        let mut request = plain_get();
+        request.if_modified_since = Some(stamp.as_str());
+        let not_modified = serve(&route, &cache, "/hello.txt", &request);
+        assert_eq!(not_modified.status, 304);
+        assert!(not_modified.body.is_empty());
+        assert_eq!(not_modified.content_type, first.content_type);
     }
 
     #[test]
