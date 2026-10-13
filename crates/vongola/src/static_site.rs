@@ -221,6 +221,7 @@ pub fn content_type_for(path: &Path) -> &'static str {
         Some("jpeg" | "jpg") => "image/jpeg",
         Some("js") => "text/javascript; charset=utf-8",
         Some("json") => "application/json",
+        Some("pdf") => "application/pdf",
         Some("png") => "image/png",
         Some("svg") => "image/svg+xml",
         Some("txt") => "text/plain; charset=utf-8",
@@ -1081,6 +1082,18 @@ mod tests {
             format_http_date(SystemTime::UNIX_EPOCH),
             "Thu, 01 Jan 1970 00:00:00 GMT"
         );
+    }
+
+    #[test]
+    fn validation_pdf_content_type() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("doc.pdf"), b"%PDF-1.4 fake").unwrap();
+        let route = route_for(dir.path());
+        let cache = StaticCache::new();
+        let response = serve(&route, &cache, "/doc.pdf", &plain_get());
+        assert_eq!(response.status, 200);
+        assert_eq!(response.content_type, "application/pdf");
+        assert_eq!(response.body, b"%PDF-1.4 fake");
     }
 
     #[test]
