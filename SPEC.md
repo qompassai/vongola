@@ -71,8 +71,13 @@ disabled.
 - **Metrics**: served on the admin listener at `/metrics`
   (Prometheus text format). The registry is populated from the first
   request: request counters by route and status class, request
-  latency histograms, upstream health gauges, cache counters,
-  dropped-log-line counter. An empty registry is a defect.
+  and upstream latency histograms, upstream health gauges, cache
+  counters, TLS handshakes by negotiated group with a
+  classical-fallback counter, handshake failures by stage class,
+  certificate expiry gauges computed at scrape time, log-line
+  counters by level and source, dropped-log-line counter. Labels
+  are bounded (config-derived keys, capped; never a client
+  identifier or client-sent SNI). An empty registry is a defect.
 
 </details>
 
@@ -348,6 +353,15 @@ execution.
   Mutating tools (operator token required, enumerated here):
   `config_reload`, `rotate_self_signed`. Unknown tools and
   unauthenticated mutations are denied before execution (tested).
+- **Read-only daemon MCP** (`vongola-mcp`, separate workspace
+  package, not built by default): a stdio-only MCP server that
+  reads the running daemon's loopback admin surfaces
+  (`/api/state`, `/metrics`) on every call. Tools:
+  `cert_status`, `log_counters`, `routes_list`, `tls_stats`,
+  `upstream_health`. No listener, no write tools, a non-loopback
+  admin address is refused, and an unreachable daemon is a
+  structured `daemon.unavailable` tool error, never a cached or
+  invented value.
 - **A2A**: when enabled for a route or the node, vongola serves a
   signed Agent Card at `/.well-known/agent-card.json` (Ed25519
   signature over the canonical card JSON; the signing key lives in

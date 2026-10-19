@@ -45,6 +45,49 @@ the bound, not the expectation).
 </details>
 
 <details>
+<summary>Metrics reference</summary>
+
+Every family below is emitted from boot, with counters at 0.
+Labels are bounded: fixed families are closed enums, and keyed
+families (`route`, `upstream`, `host`) take their keys from the
+config only. `route` and `upstream` are additionally capped at
+256 keys each; anything past the cap folds into `overflow`. No
+label ever carries a client address, a client identifier, or a
+client-sent SNI.
+
+| Family | Type | Labels |
+|---|---|---|
+| `vongola_cert_days_until_expiry`, `vongola_cert_expiry_seconds` | gauge | `host` (configured names), computed at scrape time |
+| `vongola_log_lines_total` | counter | `level` (5) × `source` = `other`/`pingora`/`vongola` |
+| `vongola_request_latency_ms` | histogram | — (buckets 1…5000 ms) |
+| `vongola_requests_total` | counter | `status_class` (4) |
+| `vongola_route_requests_total` | counter | `route` × `status_class` |
+| `vongola_tls_classical_fallback_total` | counter | — |
+| `vongola_tls_handshake_failures_total` | counter | `class` = `after_certificate`/`before_certificate`/`no_certificate` |
+| `vongola_tls_handshakes_total` | counter | `group` = the 5 allowlisted groups + `unknown` |
+| `vongola_upstream_healthy` | gauge | `upstream` = `route/address` |
+| `vongola_upstream_latency_ms` | histogram | `upstream` (time to upstream response header) |
+
+How the TLS counters are taken (observe-only; the handshake
+itself is unchanged):
+
+- A ClientHello callback attaches a guard to each connection.
+- Certificate selection marks the stage it reached.
+- Handshake completion records the negotiated group from the
+  client's key share.
+- A guard freed before completion counts one failure, classed
+  by the last stage it reached. `before_certificate` covers
+  version, group, and malformed-hello refusals.
+  `no_certificate` means an unknown SNI with no fallback.
+  `after_certificate` covers cipher mismatch, the client
+  rejecting the certificate, and client aborts.
+- Connections that never send a ClientHello are not counted.
+- OpenSSL does not expose the alert code through a safe API,
+  so classes are stages, not alerts.
+
+</details>
+
+<details>
 <summary>Fleet rollout</summary>
 
 1. Bump `bundle_version`, validate the bundle

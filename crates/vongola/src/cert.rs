@@ -25,19 +25,39 @@
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, OnceLock};
 
+use openssl::ex_data::Index;
+use openssl::pkey::{Id, PKeyRef, Public};
+use openssl::ssl::{ClientHelloResponse, Ssl, SslContextBuilder, SslRef};
 use pingora::tls::pkey::PKey;
 use pingora::tls::x509::X509;
 
 use crate::config::Config;
+use crate::metrics::{HandshakeGuard, TlsCounters, TlsGroup};
+
+const SECONDS_PER_DAY: f64 = 86_400.0;
 
 pub struct CertEntry {
     pub cert_pem: Vec<u8>,
-    pub days_until_expiry: f64,
     pub fingerprint_sha256: String,
     pub host: String,
+    pub issuer: String,
     pub key_pem: Vec<u8>,
+    /// notAfter as OpenSSL prints it (`openssl x509 -enddate`).
+    pub not_after: String,
+    pub not_after_unix: i64,
     pub self_signed: bool,
+    pub subject: String,
+}
+
+impl CertEntry {
+    /// Seconds from now until notAfter (negative once expired),
+    /// computed at call time so gauges never go stale between
+    /// reloads.
+    pub fn expiry_seconds(&self) -> i64 {
+        self.not_after_unix - crate::dashboard::unix_now() as i64
+    }
 }
 
 pub struct CertStore {
@@ -47,9 +67,14 @@ pub struct CertStore {
 #[derive(serde::Serialize)]
 pub struct CertInventoryItem {
     pub days_until_expiry: f64,
+    pub expiry_seconds: i64,
     pub fingerprint_sha256: String,
     pub host: String,
+    pub issuer: String,
+    pub not_after: String,
+    pub not_after_unix: i64,
     pub self_signed: bool,
+    pub subject: String,
 }
 
 impl CertStore {
@@ -67,11 +92,14 @@ impl CertStore {
                 if let Some(entry) = entries.get(&route.host) {
                     let clone = CertEntry {
                         cert_pem: entry.cert_pem.clone(),
-                        days_until_expiry: entry.days_until_expiry,
                         fingerprint_sha256: entry.fingerprint_sha256.clone(),
                         host: extra.clone(),
+                        issuer: entry.issuer.clone(),
                         key_pem: entry.key_pem.clone(),
+                        not_after: entry.not_after.clone(),
+                        not_after_unix: entry.not_after_unix,
                         self_signed: entry.self_signed,
+                        subject: entry.subject.clone(),
                     };
                     entries.entry(extra.clone()).or_insert(clone);
                 }
@@ -88,11 +116,19 @@ impl CertStore {
     pub fn inventory(&self) -> Vec<CertInventoryItem> {
         self.entries
             .values()
-            .map(|entry| CertInventoryItem {
-                days_until_expiry: entry.days_until_expiry,
-                fingerprint_sha256: entry.fingerprint_sha256.clone(),
-                host: entry.host.clone(),
-                self_signed: entry.self_signed,
+            .map(|entry| {
+                let expiry_seconds = entry.expiry_seconds();
+                CertInventoryItem {
+                    days_until_expiry: expiry_seconds as f64 / SECONDS_PER_DAY,
+                    expiry_seconds,
+                    fingerprint_sha256: entry.fingerprint_sha256.clone(),
+                    host: entry.host.clone(),
+                    issuer: entry.issuer.clone(),
+                    not_after: entry.not_after.clone(),
+                    not_after_unix: entry.not_after_unix,
+                    self_signed: entry.self_signed,
+                    subject: entry.subject.clone(),
+                }
             })
             .collect()
     }
@@ -133,21 +169,38 @@ fn entry_from_pem(
         .iter()
         .map(|b| format!("{b:02x}"))
         .collect::<String>();
-    let days_until_expiry = days_until(cert.not_after());
+    let not_after_unix =
+        unix_seconds(cert.not_after()).map_err(|e| format!("cert notAfter for {host}: {e}"))?;
     Ok(CertEntry {
         cert_pem,
-        days_until_expiry,
         fingerprint_sha256,
         host: host.to_string(),
+        issuer: name_text(cert.issuer_name()),
         key_pem,
+        not_after: cert.not_after().to_string(),
+        not_after_unix,
         self_signed,
+        subject: name_text(cert.subject_name()),
     })
 }
 
-fn days_until(not_after: &openssl::asn1::Asn1TimeRef) -> f64 {
-    let now = openssl::asn1::Asn1Time::days_from_now(0).expect("asn1 time");
-    let diff = now.diff(not_after).expect("asn1 diff");
-    diff.days as f64 + (diff.secs as f64 / 86_400.0)
+/// `CN=example, O=Org` style rendering of an X.509 name, in
+/// certificate order. Unconvertible entries render as `?`.
+fn name_text(name: &openssl::x509::X509NameRef) -> String {
+    name.entries()
+        .map(|entry| {
+            let key = entry.object().nid().short_name().unwrap_or("?");
+            let value = entry.data().to_string().unwrap_or_else(|_| "?".to_string());
+            format!("{key}={value}")
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+fn unix_seconds(time: &openssl::asn1::Asn1TimeRef) -> Result<i64, openssl::error::ErrorStack> {
+    let epoch = openssl::asn1::Asn1Time::from_unix(0)?;
+    let diff = epoch.diff(time)?;
+    Ok(i64::from(diff.days) * 86_400 + i64::from(diff.secs))
 }
 
 /// Generate (or reuse) the self-signed fallback certificate for a
@@ -254,6 +307,72 @@ fn effective_servername(ssl: &pingora::protocols::tls::TlsRef) -> Option<String>
         .map(|s| s.to_lowercase())
 }
 
+/// Classify the negotiated key-exchange group from the client's
+/// key share for it (`SSL_get_peer_tmp_key`), using safe APIs
+/// only. Classical groups carry a legacy key id (and an EC curve
+/// name). The hybrid groups are provider-only keys (id -1); they
+/// are told apart by their exact (bits, size) pair, measured on
+/// OpenSSL 3.6.5 and pinned by the handshake tests below:
+/// SecP384r1MLKEM1024 = (1024, 1665), X25519MLKEM768 = (768,
+/// 1120) — size being the hybrid ciphertext length. Anything else
+/// is `Unknown`, never guessed.
+pub fn classify_group(key: &PKeyRef<Public>) -> TlsGroup {
+    let id = key.id();
+    if id == Id::X25519 {
+        return TlsGroup::X25519;
+    }
+    if id == Id::EC {
+        let curve = key.ec_key().ok().and_then(|ec| ec.group().curve_name());
+        return match curve {
+            Some(openssl::nid::Nid::SECP384R1) => TlsGroup::Secp384r1,
+            Some(openssl::nid::Nid::X9_62_PRIME256V1) => TlsGroup::Secp256r1,
+            _ => TlsGroup::Unknown,
+        };
+    }
+    match (key.bits(), key.size()) {
+        (1024, 1665) => TlsGroup::SecP384r1MlKem1024,
+        (768, 1120) => TlsGroup::X25519MlKem768,
+        _ => TlsGroup::Unknown,
+    }
+}
+
+/// The SSL ex-data slot holding each connection's guard.
+fn guard_index() -> Option<Index<Ssl, HandshakeGuard>> {
+    static INDEX: OnceLock<Option<Index<Ssl, HandshakeGuard>>> = OnceLock::new();
+    *INDEX.get_or_init(|| Ssl::new_ex_index().ok())
+}
+
+/// Attach handshake accounting to a listener: a ClientHello
+/// callback that gives each connection one `HandshakeGuard`. It
+/// always answers SUCCESS — it observes, it never changes the
+/// handshake. A second ClientHello (after HelloRetryRequest)
+/// finds the guard already present and leaves it alone.
+pub fn install_handshake_accounting(builder: &mut SslContextBuilder, counters: Arc<TlsCounters>) {
+    builder.set_client_hello_callback(move |ssl, _alert| {
+        if let Some(index) = guard_index()
+            && ssl.ex_data(index).is_none()
+        {
+            ssl.set_ex_data(index, HandshakeGuard::new(counters.clone()));
+        }
+        Ok(ClientHelloResponse::SUCCESS)
+    });
+}
+
+/// Count a completed handshake on `ssl` by its negotiated group.
+pub fn record_handshake_complete(ssl: &SslRef) {
+    let group = ssl
+        .peer_tmp_key()
+        .map(|key| classify_group(&key))
+        .unwrap_or(TlsGroup::Unknown);
+    with_guard(ssl, |guard| guard.complete(group));
+}
+
+fn with_guard(ssl: &SslRef, action: impl FnOnce(&HandshakeGuard)) {
+    if let Some(guard) = guard_index().and_then(|index| ssl.ex_data(index)) {
+        action(guard);
+    }
+}
+
 /// TLS accept callback: exact-SNI certificate selection. Falls
 /// back to the default (first) entry only when the client sent no
 /// SNI at all; a wrong certificate is never served.
@@ -276,12 +395,24 @@ impl pingora::listeners::TlsAccept for SniCertSelector {
         let Some(entry) = entry else {
             // No certificate for this name and no fallback: leave
             // the handshake to fail rather than serve a wrong cert.
+            with_guard(ssl, HandshakeGuard::no_certificate);
             return;
         };
         if let Some((cert, key)) = store.parsed(entry) {
             let _ = pingora::tls::ext::ssl_use_certificate(ssl, &cert);
             let _ = pingora::tls::ext::ssl_use_private_key(ssl, &key);
+            with_guard(ssl, HandshakeGuard::certificate_selected);
+        } else {
+            with_guard(ssl, HandshakeGuard::no_certificate);
         }
+    }
+
+    async fn handshake_complete_callback(
+        &self,
+        ssl: &pingora::protocols::tls::TlsRef,
+    ) -> Option<Arc<dyn std::any::Any + Send + Sync>> {
+        record_handshake_complete(ssl);
+        None
     }
 }
 
@@ -333,6 +464,152 @@ mod tests {
             first.fingerprint_sha256,
             "existing pair must be reused"
         );
+    }
+
+    /// One real loopback handshake through the accounting hooks
+    /// (ClientHello guard + completion record), server allowing
+    /// the full default group list. Returns the rendered TLS
+    /// metrics once the server-side SSL object has been freed.
+    fn handshake_metrics(
+        client_groups: &str,
+        client_max: openssl::ssl::SslVersion,
+    ) -> (bool, String) {
+        use openssl::ssl::{SslAcceptor, SslConnector, SslMethod, SslVerifyMode};
+        let key_pair = rcgen::KeyPair::generate_for(&rcgen::PKCS_ECDSA_P256_SHA256).unwrap();
+        let generated = rcgen::CertificateParams::new(vec!["hs.test".to_string()])
+            .unwrap()
+            .self_signed(&key_pair)
+            .unwrap();
+        let cert = X509::from_pem(generated.pem().as_bytes()).unwrap();
+        let key = PKey::private_key_from_pem(key_pair.serialize_pem().as_bytes()).unwrap();
+        let counters = Arc::new(TlsCounters::default());
+        let mut builder = SslAcceptor::mozilla_modern_v5(SslMethod::tls()).unwrap();
+        builder.set_certificate(&cert).unwrap();
+        builder.set_private_key(&key).unwrap();
+        builder
+            .set_groups_list(&crate::config::DEFAULT_TLS_GROUPS.join(":"))
+            .unwrap();
+        install_handshake_accounting(&mut builder, counters.clone());
+        let acceptor = builder.build();
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = std::thread::spawn(move || {
+            let (socket, _) = listener.accept().unwrap();
+            match acceptor.accept(socket) {
+                Ok(stream) => {
+                    record_handshake_complete(stream.ssl());
+                    true
+                }
+                Err(_) => false,
+            }
+        });
+        let mut connector = SslConnector::builder(SslMethod::tls()).unwrap();
+        connector.set_verify(SslVerifyMode::NONE);
+        connector.set_groups_list(client_groups).unwrap();
+        connector.set_max_proto_version(Some(client_max)).unwrap();
+        let socket = std::net::TcpStream::connect(address).unwrap();
+        let client = connector.build().connect("hs.test", socket);
+        let accepted = server.join().unwrap();
+        drop(client);
+        let text = crate::metrics::Metrics {
+            tls: counters,
+            ..crate::metrics::Metrics::default()
+        }
+        .render(&[]);
+        (accepted, text)
+    }
+
+    fn expired_entry() -> CertEntry {
+        let key_pair = rcgen::KeyPair::generate_for(&rcgen::PKCS_ECDSA_P256_SHA256).unwrap();
+        let mut params = rcgen::CertificateParams::new(vec!["old.test".to_string()]).unwrap();
+        params.distinguished_name = {
+            let mut name = rcgen::DistinguishedName::new();
+            name.push(rcgen::DnType::CommonName, "old.test");
+            name
+        };
+        params.not_before = time::OffsetDateTime::now_utc() - time::Duration::days(30);
+        params.not_after = time::OffsetDateTime::now_utc() - time::Duration::days(2);
+        let cert = params.self_signed(&key_pair).unwrap();
+        entry_from_pem(
+            "old.test",
+            cert.pem().into_bytes(),
+            key_pair.serialize_pem().into_bytes(),
+            true,
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn adversarial_expired_cert_reports_negative_expiry() {
+        let entry = expired_entry();
+        let seconds = entry.expiry_seconds();
+        assert!(
+            (-3 * 86_400..-86_400).contains(&seconds),
+            "expired two days ago, got {seconds}s"
+        );
+        let store = CertStore {
+            entries: BTreeMap::from([("old.test".to_string(), entry)]),
+        };
+        let item = &store.inventory()[0];
+        assert!(item.days_until_expiry < -1.0);
+        assert_eq!(item.expiry_seconds.signum(), -1);
+    }
+
+    #[test]
+    fn adversarial_tls12_client_counted_as_failure_not_handshake() {
+        let (accepted, text) =
+            handshake_metrics("X25519:secp256r1", openssl::ssl::SslVersion::TLS1_2);
+        assert!(
+            !accepted,
+            "TLS 1.3-only server must refuse a TLS 1.2 client"
+        );
+        assert!(
+            text.contains("vongola_tls_handshake_failures_total{class=\"before_certificate\"} 1"),
+            "{text}"
+        );
+        for group in crate::metrics::TLS_GROUPS {
+            assert!(text.contains(&format!(
+                "vongola_tls_handshakes_total{{group=\"{group}\"}} 0"
+            )));
+        }
+    }
+
+    #[test]
+    fn validation_cert_metadata_matches_certificate() {
+        let entry = expired_entry();
+        assert_eq!(entry.subject, "CN=old.test");
+        assert_eq!(entry.issuer, entry.subject, "self-signed");
+        let parsed = X509::from_pem(&entry.cert_pem).unwrap();
+        assert_eq!(entry.not_after, parsed.not_after().to_string());
+        assert!(entry.not_after.ends_with("GMT"), "{}", entry.not_after);
+    }
+
+    #[test]
+    fn validation_negotiated_group_classified_for_every_allowlisted_group() {
+        for (client_groups, label, classical) in [
+            ("SecP384r1MLKEM1024", "SecP384r1MLKEM1024", 0),
+            ("X25519MLKEM768", "X25519MLKEM768", 0),
+            ("X25519", "X25519", 1),
+            ("secp256r1", "secp256r1", 1),
+            ("secp384r1", "secp384r1", 1),
+        ] {
+            let (accepted, text) =
+                handshake_metrics(client_groups, openssl::ssl::SslVersion::TLS1_3);
+            assert!(accepted, "{client_groups} handshake");
+            assert!(
+                text.contains(&format!(
+                    "vongola_tls_handshakes_total{{group=\"{label}\"}} 1"
+                )),
+                "{client_groups}: {text}"
+            );
+            assert!(text.contains("vongola_tls_handshakes_total{group=\"unknown\"} 0"));
+            assert!(text.contains(&format!("vongola_tls_classical_fallback_total {classical}")));
+            for class in crate::metrics::HANDSHAKE_FAILURE_CLASSES {
+                assert!(text.contains(&format!(
+                    "vongola_tls_handshake_failures_total{{class=\"{class}\"}} 0"
+                )));
+            }
+        }
     }
 
     #[test]

@@ -45,6 +45,11 @@ pub struct Ctx {
     pub route_name: String,
     pub started: Instant,
     pub status: u16,
+    /// Selected upstream as "route/address" (the health-map key).
+    pub upstream: String,
+    /// Set when an upstream peer is selected; read when its
+    /// response header arrives (upstream latency histogram).
+    pub upstream_started: Option<Instant>,
 }
 
 pub struct VongolaProxy {
@@ -106,6 +111,8 @@ impl ProxyHttp for VongolaProxy {
             route_name: String::new(),
             started: Instant::now(),
             status: 0,
+            upstream: String::new(),
+            upstream_started: None,
         }
     }
 
@@ -400,6 +407,8 @@ impl ProxyHttp for VongolaProxy {
                 "no healthy upstream available",
             ));
         };
+        ctx.upstream = format!("{}/{}", route.display_name(), upstream.address);
+        ctx.upstream_started = Some(Instant::now());
         let sni = upstream.sni.clone().unwrap_or_else(|| route.host.clone());
         let mut peer = HttpPeer::new(upstream.address.clone(), upstream.tls, sni);
         peer.options.connection_timeout = Some(std::time::Duration::from_secs(5));
@@ -426,6 +435,11 @@ impl ProxyHttp for VongolaProxy {
         ctx: &mut Self::CTX,
     ) -> Result<()> {
         ctx.status = upstream_response.status.as_u16();
+        if let Some(started) = ctx.upstream_started.take() {
+            self.state
+                .metrics
+                .record_upstream_latency(&ctx.upstream, started.elapsed().as_millis() as u64);
+        }
         upstream_response.remove_header("server");
         upstream_response.insert_header("X-Request-Id", ctx.request_id.clone())?;
         let config = self.state.config_snapshot();

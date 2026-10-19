@@ -82,6 +82,7 @@ impl log::Log for BoundedLogger {
         if !self.enabled(record.metadata()) {
             return;
         }
+        metrics::record_log_line(record.level(), record.target());
         let line = format!("{} {} {}", record.level(), record.target(), record.args());
         let line = auth::redact(&line);
         match self.sender.try_send(line) {
@@ -395,6 +396,9 @@ fn cmd_serve(path: PathBuf) {
         };
         let mut tls_settings =
             TlsSettings::with_callbacks(Box::new(selector)).expect("tls settings");
+        // Observe-only: counts handshakes by negotiated group and
+        // failures by stage; never alters the handshake.
+        cert::install_handshake_accounting(&mut tls_settings, state.metrics.tls.clone());
         // TLS 1.3 only, with the validated PQ-hybrid group
         // allowlist as the preference order (config validation
         // has already rejected anything weaker).

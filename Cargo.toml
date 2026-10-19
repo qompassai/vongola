@@ -18,12 +18,17 @@
 # #################################################################
 
 [workspace]
+# crates/vongola-mcp (the read-only operator MCP client) is a
+# member but not a default member: a plain `cargo build` and the
+# flake's package build compile vongola alone, unchanged. Build
+# it with `cargo build -p vongola-mcp` (or `--workspace`).
+default-members = ["crates/vongola"]
 # crates/vongola-ech is excluded on purpose: it is a standalone
 # crate (its own workspace) that only builds against OpenSSL
 # >= 4.0 and joins this build solely as an optional path
 # dependency behind vongola's `ech` feature.
 exclude = ["crates/vongola-ech"]
-members = ["crates/vongola"]
+members = ["crates/vongola", "crates/vongola-mcp"]
 resolver = "2"
 
 [workspace.package]
