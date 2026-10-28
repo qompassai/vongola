@@ -19,7 +19,7 @@
 
 [package]
 name = "vongola-mcp"
-version = "0.1.0"
+version = "0.2.0"
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
@@ -30,5 +30,9 @@ name = "vongola-mcp"
 path = "src/main.rs"
 
 [dependencies]
+# rmcp is pinned to the fleet version (D-113 standardization): one
+# SDK version across every estate MCP server, modern era only.
+rmcp = { version = "=3.8.0", features = ["server", "transport-io"] }
 serde_json = "1"
 serde_yaml = "0.9"
+tokio = { version = "1", features = ["io-std", "io-util", "macros", "rt-multi-thread", "sync", "time"] }
