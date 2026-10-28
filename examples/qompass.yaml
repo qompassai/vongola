@@ -1,0 +1,56 @@
+# #################################################################
+# /qompassai/vongola/examples/qompass.yaml
+# Qompass AI Example — qompass.ai hosting profile
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 Qompass AI
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# #################################################################
+
+# The qompass.ai hosting profile: apex serves the static site,
+# www redirects to apex, /api/* proxies to a local service.
+# Certificates are operator-supplied; uncomment
+# self_signed_fallback for a first local run.
+
+a2a:
+  enabled: true
+  name: "vongola-qompass"
+  skills: ["reverse-proxy", "static-hosting"]
+bundle_version: "1"
+listeners:
+  admin:
+    bind: "127.0.0.1:9091"
+  http:
+    bind: "0.0.0.0:8080"
+  https:
+    bind: "0.0.0.0:4433"
+node_name: "qompass-edge-1"
+profile: hosting
+routes:
+  - host: "qompass.ai"
+    additional_hosts: ["www.qompass.ai"]
+    redirect_www_to_apex: true
+    security_headers: true
+    static_root: "./examples/site"
+    cache:
+      enabled: true
+      max_age_secs: 3600
+    upstreams: []
+  - host: "qompass.ai"
+    name: "qompass-api"
+    path_prefixes: ["/api/*"]
+    security_headers: true
+    upstreams:
+      - address: "127.0.0.1:3000"
+state_dir: "./vongola-state"
+worker_threads: 4

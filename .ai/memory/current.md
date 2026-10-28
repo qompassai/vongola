@@ -1,15 +1,15 @@
-# Current Work
+# Vongola — Current State
 
-Language/framework mirror repository (qompassai hygiene program).
+2026-10-10: clean-room rewrite in progress on branch
+`cleanroom/vongola-20261010`. The rewrite is implemented fresh
+from `SPEC.md` (public surfaces only) against Pingora 0.9.0. The
+previous implementation remains untouched on `master`.
 
-## Status
+Shape: one crate (`crates/vongola`), modules alphabetical —
+a2a, admin, auth, cert, chain, config, dashboard, mcp, metrics,
+nat, oauth, proxy, state, static_site, tor, upstream.
 
-Mirror of upstream. Not actively developed; synced periodically.
-See qompassai/Python for the license normalization pilot pattern.
-
-## Standing rules
-
-- License: Apache-2.0 (SPDX). `LICENSE` file byte-identical to canonical
-  text except filled copyright line.
-- Do not push code changes without Matt's explicit direction; mirrors
-  track upstream.
+Standing rules in force: Tiger Style Rust; alphabetical order
+everywhere (Matt, 2026-10-10); Tor is never an exit node; proxy
+chains fail closed; secrets are referenced by environment
+variable name, never stored in config or logs.

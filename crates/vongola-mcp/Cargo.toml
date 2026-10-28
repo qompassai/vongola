@@ -1,0 +1,38 @@
+# #################################################################
+# /qompassai/vongola/crates/vongola-mcp/Cargo.toml
+# Qompass AI Cargo
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 Qompass AI
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# #################################################################
+
+[package]
+name = "vongola-mcp"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Read-only, operator-local stdio MCP server over a running vongola daemon's admin surfaces."
+
+[[bin]]
+name = "vongola-mcp"
+path = "src/main.rs"
+
+[dependencies]
+# rmcp is pinned to the fleet version (D-113 standardization): one
+# SDK version across every estate MCP server, modern era only.
+rmcp = { version = "=3.8.0", features = ["server", "transport-io"] }
+serde_json = "1"
+serde_yaml = "0.9"
+tokio = { version = "1", features = ["io-std", "io-util", "macros", "rt-multi-thread", "sync", "time"] }

@@ -1,0 +1,7 @@
+# Vongola builds against the system OpenSSL (>= 3.5 required for
+# ML-KEM hybrid TLS groups). Pingora's vendored OpenSSL is 3.4.0,
+# which predates ML-KEM entirely; vendoring would silently drop
+# the post-quantum key exchange this project exists to prove.
+# See SPEC.md section 5 and docs/src/tls.md.
+[env]
+OPENSSL_NO_VENDOR = "1"

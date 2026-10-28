@@ -1,19 +1,12 @@
-# Memory Index
+# Vongola — Persistent Memory Index
 
-What lives in this repo's memory, and what to read first.
+- [current.md](current.md) — where the project stands right now.
+- [decisions.md](decisions.md) — durable decisions with dates and reasons.
+- [patterns.md](patterns.md) — recurring implementation patterns.
+- [inbox/](inbox/) — dated findings awaiting promotion.
+- [archive/](archive/) — retired notes.
 
-## Read at session start
-
-- `current.md` — active work, current focus
-- `decisions.md` — durable decisions with rationale
-
-## Read when relevant
-
-- `patterns.md` — conventions, recipes, gotchas
-- `inbox/` — unreviewed observations (newest first)
-- `archive/` — retired notes
-
-## Freshness
-
-`current.md` should reflect this week's reality. If it's stale, say so
-in your reply and offer to refresh it from the repo state.
+Generated bloch artifacts (`bloch-last.json`, `bloch-summary.md`)
+are produced by `bloch . --update-memory` and are intentionally
+untracked (see `.gitignore`), matching the estate convention
+settled 2026-10-08.

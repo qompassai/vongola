@@ -1,0 +1,45 @@
+# #################################################################
+# /qompassai/vongola/examples/lean.yaml
+# Qompass AI Example — lean on-device profile
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 Qompass AI
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# #################################################################
+
+# Lean profile for a single small device (dev kit, thin client):
+# two worker threads, NAT mapping opt-in on the HTTPS listener,
+# one local upstream, admin on loopback only.
+
+bundle_version: "1"
+listeners:
+  admin:
+    bind: "127.0.0.1:9091"
+  http:
+    bind: "0.0.0.0:8080"
+  https:
+    bind: "0.0.0.0:4433"
+    nat:
+      enabled: false
+      lease_secs: 3600
+      protocols: ["pcp", "natpmp", "upnp"]
+node_name: "lean-1"
+profile: lean
+routes:
+  - host: "device.test"
+    security_headers: true
+    self_signed_fallback: true
+    upstreams:
+      - address: "127.0.0.1:8000"
+state_dir: "./vongola-state"
+worker_threads: 2
