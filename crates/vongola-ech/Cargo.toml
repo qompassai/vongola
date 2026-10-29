@@ -27,12 +27,12 @@ description = "Safe Rust wrapper for the OpenSSL 4.0 Encrypted Client Hello (ECH
 keywords = ["ech", "encrypted-client-hello", "openssl", "rfc9849", "tls"]
 categories = ["cryptography", "network-programming"]
 
-# This crate is deliberately NOT a member of the parent vongola
-# workspace: it compiles only against OpenSSL >= 4.0, while the
-# parent workspace's default build targets OpenSSL 3.5. It joins
-# the parent build solely as an optional path dependency behind
-# vongola's `ech` cargo feature (see crates/vongola/Cargo.toml).
-[workspace]
+# Member of the parent vongola workspace since D-302, with its
+# own version: it is published to crates.io separately (first),
+# and vongola's `ech` feature then depends on it by version +
+# path. It is not a default member — it compiles only against
+# OpenSSL >= 4.0, while the workspace's default build targets
+# the system OpenSSL (see the root Cargo.toml).
 
 [dependencies]
 base64 = "0.22"

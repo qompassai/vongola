@@ -604,9 +604,11 @@ default build's current shape).
 
 A dedicated shim crate — the ONE place `unsafe` lives in
 this tree (vongola's own crates keep
-`#![forbid(unsafe_code)]`). It is deliberately NOT a
-workspace member (it carries its own `[workspace]`); the
-parent build reaches it only as an optional path dependency
+`#![forbid(unsafe_code)]`). Since D-302 (2026-10-28) it is a
+workspace member with its own version — published to
+crates.io separately, before vongola — but not a default
+member; the parent build reaches it only as an optional
+version + path dependency
 behind vongola's `ech` cargo feature, which the flake's
 default package enables (the `vongola-openssl4` output name
 is kept as an alias of the default). It is styled for
