@@ -24,7 +24,7 @@ edition = "2024"
 license = "Apache-2.0"
 rust-version = "1.88"
 description = "Safe Rust wrapper for the OpenSSL 4.0 Encrypted Client Hello (ECH, RFC 9849) server APIs: OSSL_ECHSTORE lifecycle, SSL_CTX attachment, and per-connection ECH status."
-keywords = ["ech", "encrypted-client-hello", "openssl", "rfc9849", "tls"]
+keywords = ["ech", "client-hello", "openssl", "rfc9849", "tls"]
 categories = ["cryptography", "network-programming"]
 
 # Member of the parent vongola workspace since D-302, with its
