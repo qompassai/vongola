@@ -2,7 +2,7 @@
 
 This server's standing against the estate's canonical MCP compliance
 checklist, measured at the rmcp modern-era migration of 2026-10-28
-(crate 0.2.0, rmcp 3.8.0, protocol 2026-07-28 only). The canonical
+(crate 1.0.0, rmcp 3.8.0, protocol 2026-07-28 only). The canonical
 checklist — every row's requirement, era, level, and specification
 link — is maintained in the estate's conformance records
 (`mcp-inspector-20261020/CHECKLIST.md`); this file reproduces its
@@ -38,9 +38,7 @@ fleet: the baseline's error split already matched the row —
 unknown tool and malformed arguments are JSON-RPC errors
 (-32602), tool execution failures (including daemon faults) are
 `isError` results — and the migration preserved it exactly.
-Section 9 is Not applicable throughout: the repo carries no
-`server.json` and the server has never been published to the
-registry (publication is not authorized).
+Section 9 rows were Not applicable when this file was generated (2026-10-28): the repo then carried no server.json and the server had not been published to the registry. Publication followed under the D-656 landing (ai.qompass/vongola 0.2.0, 2026-11-03) and is refreshed at 1.0.0; the registry record lives in the repo-root server.json.
 
 One evidence caveat: no production vongola daemon runs on the
 estate's machines, so happy-path tool evidence was gathered
