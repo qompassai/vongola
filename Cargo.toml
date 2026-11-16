@@ -30,7 +30,7 @@ default-members = ["crates/vongola"]
 # default member: it only builds against OpenSSL >= 4.0, while
 # the default build targets the system OpenSSL. Build it with
 # `cargo build -p vongola-ech` in an OpenSSL 4 environment.
-members = ["crates/vongola", "crates/vongola-ech", "crates/vongola-mcp"]
+members = ["crates/vongola", "crates/vongola-ech", "crates/vongola-mcp", "crates/vongola-tui"]
 resolver = "2"
 
 [workspace.package]

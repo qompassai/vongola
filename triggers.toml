@@ -1,0 +1,39 @@
+# vongola trigger rules (fleet TUI programme DESIGN SS D4).
+#
+# Rules are data, not code: the trigger engine loads this file at
+# startup and the Fleet panel lists exactly what is declared here.
+# A rule not present in this file does not exist. Birth stamps
+# (origin_lane + content_label) follow the BLOCH lane law (D-1030):
+# this member is qompass/sfw, and every audit line and firing
+# carries the stamps from the rule.
+#
+# Gate law (SS D4): every vongola-mcp tool is read-only, and the
+# target tool here (bloch lesson_candidate) is a draft intake —
+# bloch's own gate decides acceptance — so auto mode is within
+# the law: the trigger asks, the target decides. Rung 1 ships the
+# RefusingTransport (no live MCP client wired), so firings are
+# audited as fire_failed until the transport follow-on lands.
+
+# Rule 1: a completed upstream_health run with an upstream down
+# becomes a bloch lesson candidate.
+[[rule]]
+id = "vongola-down-to-bloch-lesson"
+origin_lane = "qompass"
+content_label = "sfw"
+on = { event = "workflow.completed", where = "down_count > 0" }
+then = { mcp = "bloch", tool = "lesson_candidate", args_from = "event" }
+mode = "auto"
+idempotency = "event-hash"
+max_depth = 1
+
+# Rule 2: a completed cert_status run with a certificate inside
+# the 30-day warn window becomes a bloch lesson candidate.
+[[rule]]
+id = "vongola-cert-expiry-to-bloch-lesson"
+origin_lane = "qompass"
+content_label = "sfw"
+on = { event = "workflow.completed", where = "expiring_count > 0" }
+then = { mcp = "bloch", tool = "lesson_candidate", args_from = "event" }
+mode = "auto"
+idempotency = "event-hash"
+max_depth = 1
