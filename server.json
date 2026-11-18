@@ -11,9 +11,9 @@
   },
   "packages": [
     {
-      "registryType": "mcpb",
-      "identifier": "https://github.com/qompassai/vongola/releases/download/v0.2.0/vongola-mcp-0.2.0-linux-x64.mcpb",
-      "fileSha256": "f46ef8de8e3288c998e8dfd3fd38b58f9fb899ecd9e2d8f3bc975706e83332b0",
+      "registryType": "cargo",
+      "identifier": "vongola-mcp",
+      "version": "1.0.0",
       "transport": {
         "type": "stdio"
       }
