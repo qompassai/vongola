@@ -25,9 +25,12 @@
 //! correlated by JSON-RPC id (rmcp dispatches pipelined requests
 //! concurrently).
 //!
-//! The server is spawned with `--config` pointing at the repo's
-//! example config (admin listener 127.0.0.1:9091); no daemon is
-//! running, so tool calls answer with the recorded
+//! The server is spawned with `--config` pointing at a test copy
+//! of the repo's example config with the admin listener moved to
+//! 127.0.0.1:19091 (the smoke script's collision-avoidance port:
+//! 9091 is the daemon's real default and may be held by an
+//! unrelated service on the test machine). No daemon is running
+//! there, so tool calls answer with the recorded
 //! `daemon.unavailable` tool error — the census smoke shape.
 
 use std::io::{BufRead, BufReader, Write};
@@ -37,7 +40,9 @@ use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 const META: &str = r#""_meta": {"io.modelcontextprotocol/protocolVersion": "2026-07-28", "io.modelcontextprotocol/clientInfo": {"name": "era-test", "version": "0"}, "io.modelcontextprotocol/clientCapabilities": {}}"#;
 const LEGACY_META: &str = r#""_meta": {"io.modelcontextprotocol/protocolVersion": "2025-06-18", "io.modelcontextprotocol/clientInfo": {"name": "era-test", "version": "0"}, "io.modelcontextprotocol/clientCapabilities": {}}"#;
 
-fn vongola_bin() -> &'static str { env!("CARGO_BIN_EXE_vongola-mcp") }
+fn vongola_bin() -> &'static str {
+    env!("CARGO_BIN_EXE_vongola-mcp")
+}
 
 fn example_config() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -46,17 +51,35 @@ fn example_config() -> PathBuf {
         .expect("example config exists")
 }
 
+/// Write the per-process test config: the example config with the
+/// admin bind moved off the daemon's real default port (see the
+/// module docs). Removed by `RawServer::shutdown`.
+fn test_config() -> PathBuf {
+    let text = std::fs::read_to_string(example_config()).expect("read example config");
+    let text = text.replace("127.0.0.1:9091", "127.0.0.1:19091");
+    assert!(
+        text.contains("127.0.0.1:19091"),
+        "example admin bind not found"
+    );
+    let path =
+        std::env::temp_dir().join(format!("vongola-mcp-era-test-{}.yaml", std::process::id()));
+    std::fs::write(&path, text).expect("write test config");
+    path
+}
+
 struct RawServer {
     child: Child,
+    config: PathBuf,
     stdin: ChildStdin,
     stdout: BufReader<ChildStdout>,
 }
 
 impl RawServer {
     fn spawn() -> RawServer {
+        let config = test_config();
         let mut child = Command::new(vongola_bin())
             .arg("--config")
-            .arg(example_config())
+            .arg(&config)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
@@ -66,6 +89,7 @@ impl RawServer {
         let stdout = BufReader::new(child.stdout.take().expect("server stdout"));
         RawServer {
             child,
+            config,
             stdin,
             stdout,
         }
@@ -96,6 +120,7 @@ impl RawServer {
             match self.child.try_wait() {
                 Ok(Some(status)) => {
                     assert!(status.success(), "server exit not clean: {status}");
+                    let _ = std::fs::remove_file(&self.config);
                     return;
                 }
                 Ok(None) => {
