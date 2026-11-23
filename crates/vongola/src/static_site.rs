@@ -97,19 +97,29 @@ impl StaticCache {
     }
 }
 
+/// The one dot-named tree static hosting serves: well-known URIs
+/// (RFC 8615) are public by design — JWKS, security.txt, agent
+/// cards. The carve-out is exactly this first segment; every other
+/// dot-named component, at any depth, stays hidden.
+const WELL_KNOWN_SEGMENT: &str = ".well-known";
+
 /// Resolve a request path under the root. Returns None for any
-/// path that escapes the root, names a dotfile, or is not a file.
+/// path that escapes the root, names a dotfile outside the
+/// `.well-known` tree, or is not a file.
 pub fn resolve_under_root(root: &Path, url_path: &str) -> Option<PathBuf> {
     let decoded = percent_decode(url_path);
     let mut relative = PathBuf::new();
+    let mut at_head = true;
     for component in Path::new(&decoded).components() {
         match component {
             Component::Normal(part) => {
                 let text = part.to_string_lossy();
-                if text.starts_with('.') {
+                let public_head = at_head && text == WELL_KNOWN_SEGMENT;
+                if text.starts_with('.') && !public_head {
                     return None;
                 }
                 relative.push(part);
+                at_head = false;
             }
             Component::RootDir | Component::CurDir => {}
             Component::ParentDir | Component::Prefix(_) => return None,
@@ -332,5 +342,66 @@ mod tests {
         let asset = serve(&route, &cache, "/app.a1b2c3d4.js", true);
         assert!(asset.cache_control.contains("immutable"));
         assert_eq!(asset.content_encoding.as_deref(), Some("gzip"));
+    }
+
+    #[test]
+    fn validation_well_known_tree_serves() {
+        let dir = tempfile::tempdir().unwrap();
+        let well_known = dir.path().join(".well-known");
+        std::fs::create_dir_all(well_known.join("nested")).unwrap();
+        let jwks = "{\"keys\":[{\"kid\":\"qompass-agent-card-1\"}]}";
+        std::fs::write(well_known.join("jwks.json"), jwks).unwrap();
+        std::fs::write(well_known.join("nested").join("issuer.txt"), "qompass").unwrap();
+        // Exact bytes and the JSON content type, end to end.
+        assert_eq!(
+            resolve_under_root(dir.path(), "/.well-known/jwks.json"),
+            Some(well_known.join("jwks.json"))
+        );
+        let route = route_for(dir.path());
+        let cache = StaticCache::new();
+        let response = serve(&route, &cache, "/.well-known/jwks.json", false);
+        assert_eq!(response.status, 200);
+        assert_eq!(response.body, jwks.as_bytes());
+        assert_eq!(response.content_type, "application/json");
+        // Nested paths under the tree resolve, and doubled
+        // separators collapse onto the same public file.
+        assert_eq!(
+            resolve_under_root(dir.path(), "/.well-known/nested/issuer.txt"),
+            Some(well_known.join("nested").join("issuer.txt"))
+        );
+        assert_eq!(
+            resolve_under_root(dir.path(), "//.well-known//jwks.json"),
+            Some(well_known.join("jwks.json"))
+        );
+    }
+
+    #[test]
+    fn adversarial_well_known_carve_out_stays_narrow() {
+        let dir = tempfile::tempdir().unwrap();
+        let well_known = dir.path().join(".well-known");
+        std::fs::create_dir_all(&well_known).unwrap();
+        std::fs::write(well_known.join("jwks.json"), "{}").unwrap();
+        std::fs::write(dir.path().join(".env"), "SECRET=1").unwrap();
+        std::fs::create_dir_all(dir.path().join(".git")).unwrap();
+        std::fs::write(dir.path().join(".git").join("config"), "[core]").unwrap();
+        // Sibling dot-paths stay hidden.
+        assert!(resolve_under_root(dir.path(), "/.env").is_none());
+        assert!(resolve_under_root(dir.path(), "/.git/config").is_none());
+        // Traversal out of the public tree, raw or encoded, fails.
+        assert!(resolve_under_root(dir.path(), "/.well-known/../.env").is_none());
+        assert!(resolve_under_root(dir.path(), "/.well-known/%2e%2e/.env").is_none());
+        assert!(resolve_under_root(dir.path(), "/.well-known/..%5c.env").is_none());
+        // Dot-named entries inside the tree stay hidden too.
+        std::fs::write(well_known.join(".hidden"), "x").unwrap();
+        assert!(resolve_under_root(dir.path(), "/.well-known/.hidden").is_none());
+        // Lookalike heads do not inherit the carve-out: the match
+        // is the exact lowercase segment, first position only.
+        std::fs::create_dir_all(dir.path().join(".well-knownx")).unwrap();
+        std::fs::write(dir.path().join(".well-knownx").join("jwks.json"), "{}").unwrap();
+        assert!(resolve_under_root(dir.path(), "/.well-knownx/jwks.json").is_none());
+        std::fs::create_dir_all(dir.path().join(".Well-Known")).unwrap();
+        std::fs::write(dir.path().join(".Well-Known").join("jwks.json"), "{}").unwrap();
+        assert!(resolve_under_root(dir.path(), "/.Well-Known/jwks.json").is_none());
+        assert!(resolve_under_root(dir.path(), "/nested/.well-known/jwks.json").is_none());
     }
 }
