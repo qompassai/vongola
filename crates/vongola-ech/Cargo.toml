@@ -1,0 +1,40 @@
+# #################################################################
+# /qompassai/vongola/crates/vongola-ech/Cargo.toml
+# Qompass AI Cargo
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 Qompass AI
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# #################################################################
+
+[package]
+name = "vongola-ech"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+rust-version = "1.88"
+description = "Safe Rust wrapper for the OpenSSL 4.0 Encrypted Client Hello (ECH, RFC 9849) server APIs: OSSL_ECHSTORE lifecycle, SSL_CTX attachment, and per-connection ECH status."
+keywords = ["ech", "client-hello", "openssl", "rfc9849", "tls"]
+categories = ["cryptography", "network-programming"]
+
+# Member of the parent vongola workspace since D-302, with its
+# own version: it is published to crates.io separately (first),
+# and vongola's `ech` feature then depends on it by version +
+# path. It is not a default member — it compiles only against
+# OpenSSL >= 4.0, while the workspace's default build targets
+# the system OpenSSL (see the root Cargo.toml).
+
+[dependencies]
+base64 = "0.22"
+libc = "0.2"
+openssl-sys = "0.9"

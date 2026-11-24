@@ -18,7 +18,15 @@
 # #################################################################
 
 [workspace]
-members = ["crates/vongola"]
+default-members = ["crates/vongola"]
+# crates/vongola-ech is a workspace member with its own version
+# (D-302) so it can be published to crates.io in its own right —
+# vongola's `ech` feature depends on it by version + path, and a
+# path-only dependency is rejected by crates.io. It is not a
+# default member: it only builds against OpenSSL >= 4.0, while
+# the default build targets the system OpenSSL. Build it with
+# `cargo build -p vongola-ech` in an OpenSSL 4 environment.
+members = ["crates/vongola", "crates/vongola-ech"]
 resolver = "2"
 
 [workspace.package]

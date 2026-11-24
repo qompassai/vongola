@@ -71,10 +71,20 @@ pub fn state_json(state: &Arc<State>) -> serde_json::Value {
             })
         })
         .collect();
+    let ech = state
+        .ech
+        .read()
+        .map(|slot| slot.clone())
+        .unwrap_or_default();
     serde_json::json!({
         "bundle": {"sha256": state.bundle_sha256.clone(), "version": config.bundle_version.clone()},
         "certificates": certs,
         "chain_health": chain_health,
+        "ech": {
+            "config_list": ech.as_ref().map(|public| public.config_list_base64.clone()),
+            "enabled": config.tls.ech.enabled,
+            "public_name": ech.as_ref().map(|public| public.public_name.clone()),
+        },
         "generated_at_unix": unix_now(),
         "metrics": {
             "cache_hits": state.metrics.cache_hits.load(std::sync::atomic::Ordering::Relaxed),
@@ -134,6 +144,10 @@ bundle <span id="bundle">?</span> · data as of <span id="fresh">?</span>
 <table id="upstreams"><tr><th>route/upstream</th><th>healthy</th></tr></table>
 <table id="certs"><tr><th>host</th><th>days to expiry</th><th>sha256 fingerprint</th><th>self-signed</th></tr></table>
 
+<h2>Encrypted Client Hello (ECH)</h2>
+<p>Enabled: <span id="ech-enabled">?</span> · public name: <span id="ech-name">?</span></p>
+<p>Publish in the DNS HTTPS record as ech=: <code id="ech-config"></code></p>
+
 <h2>Counters</h2>
 <p id="counters">?</p>
 
@@ -172,6 +186,9 @@ async function refresh() {
     ]);
     rows("upstreams", Object.entries(state.upstream_health), ([key, healthy]) => [key, healthy]);
     rows("certs", state.certificates, (c) => [c.host, Math.round(c.days_until_expiry), c.fingerprint_sha256.slice(0, 16) + "…", c.self_signed]);
+    $("ech-enabled").textContent = state.ech.enabled;
+    $("ech-name").textContent = state.ech.public_name || "(none)";
+    $("ech-config").textContent = state.ech.config_list || "(not generated)";
     $("counters").textContent = "requests " + state.metrics.requests_total +
       " · cache hits " + state.metrics.cache_hits + " · misses " + state.metrics.cache_misses +
       " · chain failures " + state.metrics.chain_failures +
@@ -207,6 +224,7 @@ mod tests {
             "bundle",
             "certificates",
             "chain_health",
+            "ech",
             "nat",
             "node",
             "routes",
@@ -225,6 +243,7 @@ mod tests {
             "NAT traversal",
             "Tor onion services",
             "Proxy chains",
+            "Encrypted Client Hello (ECH)",
             "setInterval(refresh, 2000)",
         ] {
             assert!(DASHBOARD_HTML.contains(marker), "missing {marker}");
