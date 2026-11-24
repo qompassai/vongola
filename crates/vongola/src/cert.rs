@@ -25,11 +25,16 @@
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, OnceLock};
 
+use openssl::ex_data::Index;
+use openssl::pkey::{Id, PKeyRef, Public};
+use openssl::ssl::{ClientHelloResponse, Ssl, SslContextBuilder, SslRef};
 use pingora::tls::pkey::PKey;
 use pingora::tls::x509::X509;
 
 use crate::config::Config;
+use crate::metrics::{HandshakeGuard, TlsCounters, TlsGroup};
 
 #[derive(Clone)]
 pub struct CertEntry {
@@ -251,6 +256,72 @@ pub fn rotate_self_signed(config: &Config, host: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// Classify the negotiated key-exchange group from the client's
+/// key share for it (`SSL_get_peer_tmp_key`), using safe APIs
+/// only. Classical groups carry a legacy key id (and an EC curve
+/// name). The hybrid groups are provider-only keys (id -1); they
+/// are told apart by their exact (bits, size) pair, measured on
+/// OpenSSL 3.6.5 and pinned by the handshake tests below:
+/// SecP384r1MLKEM1024 = (1024, 1665), X25519MLKEM768 = (768,
+/// 1120) — size being the hybrid ciphertext length. Anything else
+/// is `Unknown`, never guessed.
+pub fn classify_group(key: &PKeyRef<Public>) -> TlsGroup {
+    let id = key.id();
+    if id == Id::X25519 {
+        return TlsGroup::X25519;
+    }
+    if id == Id::EC {
+        let curve = key.ec_key().ok().and_then(|ec| ec.group().curve_name());
+        return match curve {
+            Some(openssl::nid::Nid::SECP384R1) => TlsGroup::Secp384r1,
+            Some(openssl::nid::Nid::X9_62_PRIME256V1) => TlsGroup::Secp256r1,
+            _ => TlsGroup::Unknown,
+        };
+    }
+    match (key.bits(), key.size()) {
+        (1024, 1665) => TlsGroup::SecP384r1MlKem1024,
+        (768, 1120) => TlsGroup::X25519MlKem768,
+        _ => TlsGroup::Unknown,
+    }
+}
+
+/// The SSL ex-data slot holding each connection's guard.
+fn guard_index() -> Option<Index<Ssl, HandshakeGuard>> {
+    static INDEX: OnceLock<Option<Index<Ssl, HandshakeGuard>>> = OnceLock::new();
+    *INDEX.get_or_init(|| Ssl::new_ex_index().ok())
+}
+
+/// Attach handshake accounting to a listener: a ClientHello
+/// callback that gives each connection one `HandshakeGuard`. It
+/// always answers SUCCESS — it observes, it never changes the
+/// handshake. A second ClientHello (after HelloRetryRequest)
+/// finds the guard already present and leaves it alone.
+pub fn install_handshake_accounting(builder: &mut SslContextBuilder, counters: Arc<TlsCounters>) {
+    builder.set_client_hello_callback(move |ssl, _alert| {
+        if let Some(index) = guard_index()
+            && ssl.ex_data(index).is_none()
+        {
+            ssl.set_ex_data(index, HandshakeGuard::new(counters.clone()));
+        }
+        Ok(ClientHelloResponse::SUCCESS)
+    });
+}
+
+/// Count a completed handshake on `ssl` by its negotiated group.
+pub fn record_handshake_complete(ssl: &SslRef) {
+    let group = ssl
+        .peer_tmp_key()
+        .map(|key| classify_group(&key))
+        .unwrap_or(TlsGroup::Unknown);
+    with_guard(ssl, |guard| guard.complete(group));
+}
+
+fn with_guard(ssl: &SslRef, action: impl FnOnce(&HandshakeGuard)) {
+    if let Some(guard) = guard_index().and_then(|index| ssl.ex_data(index)) {
+        action(guard);
+    }
+}
+
 /// The name certificate selection must use for this
 /// connection. With ECH (OpenSSL 4 variant builds), an ECH
 /// handshake is bound to its INNER SNI — the outer name is a
@@ -288,6 +359,7 @@ impl pingora::listeners::TlsAccept for SniCertSelector {
         let Some(entry) = entry else {
             // No certificate for this name and no fallback: leave
             // the handshake to fail rather than serve a wrong cert.
+            with_guard(ssl, HandshakeGuard::no_certificate);
             return;
         };
         if let Some((cert, chain, key)) = store.parsed(entry) {
@@ -296,7 +368,18 @@ impl pingora::listeners::TlsAccept for SniCertSelector {
             for extra in &chain {
                 let _ = pingora::tls::ext::ssl_add_chain_cert(ssl, extra);
             }
+            with_guard(ssl, HandshakeGuard::certificate_selected);
+        } else {
+            with_guard(ssl, HandshakeGuard::no_certificate);
         }
+    }
+
+    async fn handshake_complete_callback(
+        &self,
+        ssl: &pingora::protocols::tls::TlsRef,
+    ) -> Option<Arc<dyn std::any::Any + Send + Sync>> {
+        record_handshake_complete(ssl);
+        None
     }
 }
 
@@ -348,6 +431,106 @@ mod tests {
             first.fingerprint_sha256,
             "existing pair must be reused"
         );
+    }
+
+    /// One real loopback handshake through the accounting hooks
+    /// (ClientHello guard + completion record), server allowing
+    /// the full default group list. Returns the rendered TLS
+    /// metrics once the server-side SSL object has been freed.
+    fn handshake_metrics(
+        client_groups: &str,
+        client_max: openssl::ssl::SslVersion,
+    ) -> (bool, String) {
+        use openssl::ssl::{SslAcceptor, SslConnector, SslMethod, SslVerifyMode};
+        let key_pair = rcgen::KeyPair::generate_for(&rcgen::PKCS_ECDSA_P256_SHA256).unwrap();
+        let generated = rcgen::CertificateParams::new(vec!["hs.test".to_string()])
+            .unwrap()
+            .self_signed(&key_pair)
+            .unwrap();
+        let cert = X509::from_pem(generated.pem().as_bytes()).unwrap();
+        let key = PKey::private_key_from_pem(key_pair.serialize_pem().as_bytes()).unwrap();
+        let counters = Arc::new(TlsCounters::default());
+        let mut builder = SslAcceptor::mozilla_modern_v5(SslMethod::tls()).unwrap();
+        builder.set_certificate(&cert).unwrap();
+        builder.set_private_key(&key).unwrap();
+        builder
+            .set_groups_list(&crate::config::DEFAULT_TLS_GROUPS.join(":"))
+            .unwrap();
+        install_handshake_accounting(&mut builder, counters.clone());
+        let acceptor = builder.build();
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = std::thread::spawn(move || {
+            let (socket, _) = listener.accept().unwrap();
+            match acceptor.accept(socket) {
+                Ok(stream) => {
+                    record_handshake_complete(stream.ssl());
+                    true
+                }
+                Err(_) => false,
+            }
+        });
+        let mut connector = SslConnector::builder(SslMethod::tls()).unwrap();
+        connector.set_verify(SslVerifyMode::NONE);
+        connector.set_groups_list(client_groups).unwrap();
+        connector.set_max_proto_version(Some(client_max)).unwrap();
+        let socket = std::net::TcpStream::connect(address).unwrap();
+        let client = connector.build().connect("hs.test", socket);
+        let accepted = server.join().unwrap();
+        drop(client);
+        let text = crate::metrics::Metrics {
+            tls: counters,
+            ..crate::metrics::Metrics::default()
+        }
+        .render(&[]);
+        (accepted, text)
+    }
+
+    #[test]
+    fn adversarial_tls12_client_counted_as_failure_not_handshake() {
+        let (accepted, text) =
+            handshake_metrics("X25519:secp256r1", openssl::ssl::SslVersion::TLS1_2);
+        assert!(
+            !accepted,
+            "TLS 1.3-only server must refuse a TLS 1.2 client"
+        );
+        assert!(
+            text.contains("vongola_tls_handshake_failures_total{class=\"before_certificate\"} 1"),
+            "{text}"
+        );
+        for group in crate::metrics::TLS_GROUPS {
+            assert!(text.contains(&format!(
+                "vongola_tls_handshakes_total{{group=\"{group}\"}} 0"
+            )));
+        }
+    }
+
+    #[test]
+    fn validation_negotiated_group_classified_for_every_allowlisted_group() {
+        for (client_groups, label, classical) in [
+            ("SecP384r1MLKEM1024", "SecP384r1MLKEM1024", 0),
+            ("X25519MLKEM768", "X25519MLKEM768", 0),
+            ("X25519", "X25519", 1),
+            ("secp256r1", "secp256r1", 1),
+            ("secp384r1", "secp384r1", 1),
+        ] {
+            let (accepted, text) =
+                handshake_metrics(client_groups, openssl::ssl::SslVersion::TLS1_3);
+            assert!(accepted, "{client_groups} handshake");
+            assert!(
+                text.contains(&format!(
+                    "vongola_tls_handshakes_total{{group=\"{label}\"}} 1"
+                )),
+                "{client_groups}: {text}"
+            );
+            assert!(text.contains("vongola_tls_handshakes_total{group=\"unknown\"} 0"));
+            assert!(text.contains(&format!("vongola_tls_classical_fallback_total {classical}")));
+            for class in crate::metrics::HANDSHAKE_FAILURE_CLASSES {
+                assert!(text.contains(&format!(
+                    "vongola_tls_handshake_failures_total{{class=\"{class}\"}} 0"
+                )));
+            }
+        }
     }
 
     #[test]
