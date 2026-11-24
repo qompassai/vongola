@@ -36,14 +36,29 @@ use pingora::tls::x509::X509;
 use crate::config::Config;
 use crate::metrics::{HandshakeGuard, TlsCounters, TlsGroup};
 
+const SECONDS_PER_DAY: f64 = 86_400.0;
+
 #[derive(Clone)]
 pub struct CertEntry {
     pub cert_pem: Vec<u8>,
-    pub days_until_expiry: f64,
     pub fingerprint_sha256: String,
     pub host: String,
+    pub issuer: String,
     pub key_pem: Vec<u8>,
+    /// notAfter as OpenSSL prints it (`openssl x509 -enddate`).
+    pub not_after: String,
+    pub not_after_unix: i64,
     pub self_signed: bool,
+    pub subject: String,
+}
+
+impl CertEntry {
+    /// Seconds from now until notAfter (negative once expired),
+    /// computed at call time so gauges never go stale between
+    /// reloads.
+    pub fn expiry_seconds(&self) -> i64 {
+        self.not_after_unix - crate::dashboard::unix_now() as i64
+    }
 }
 
 pub struct CertStore {
@@ -53,9 +68,14 @@ pub struct CertStore {
 #[derive(serde::Serialize)]
 pub struct CertInventoryItem {
     pub days_until_expiry: f64,
+    pub expiry_seconds: i64,
     pub fingerprint_sha256: String,
     pub host: String,
+    pub issuer: String,
+    pub not_after: String,
+    pub not_after_unix: i64,
     pub self_signed: bool,
+    pub subject: String,
 }
 
 impl CertStore {
@@ -73,11 +93,14 @@ impl CertStore {
                 if let Some(entry) = entries.get(&route.host) {
                     let clone = CertEntry {
                         cert_pem: entry.cert_pem.clone(),
-                        days_until_expiry: entry.days_until_expiry,
                         fingerprint_sha256: entry.fingerprint_sha256.clone(),
                         host: extra.clone(),
+                        issuer: entry.issuer.clone(),
                         key_pem: entry.key_pem.clone(),
+                        not_after: entry.not_after.clone(),
+                        not_after_unix: entry.not_after_unix,
                         self_signed: entry.self_signed,
+                        subject: entry.subject.clone(),
                     };
                     entries.entry(extra.clone()).or_insert(clone);
                 }
@@ -94,11 +117,19 @@ impl CertStore {
     pub fn inventory(&self) -> Vec<CertInventoryItem> {
         self.entries
             .values()
-            .map(|entry| CertInventoryItem {
-                days_until_expiry: entry.days_until_expiry,
-                fingerprint_sha256: entry.fingerprint_sha256.clone(),
-                host: entry.host.clone(),
-                self_signed: entry.self_signed,
+            .map(|entry| {
+                let expiry_seconds = entry.expiry_seconds();
+                CertInventoryItem {
+                    days_until_expiry: expiry_seconds as f64 / SECONDS_PER_DAY,
+                    expiry_seconds,
+                    fingerprint_sha256: entry.fingerprint_sha256.clone(),
+                    host: entry.host.clone(),
+                    issuer: entry.issuer.clone(),
+                    not_after: entry.not_after.clone(),
+                    not_after_unix: entry.not_after_unix,
+                    self_signed: entry.self_signed,
+                    subject: entry.subject.clone(),
+                }
             })
             .collect()
     }
@@ -150,21 +181,38 @@ pub(crate) fn entry_from_pem(
         .iter()
         .map(|b| format!("{b:02x}"))
         .collect::<String>();
-    let days_until_expiry = days_until(cert.not_after());
+    let not_after_unix =
+        unix_seconds(cert.not_after()).map_err(|e| format!("cert notAfter for {host}: {e}"))?;
     Ok(CertEntry {
         cert_pem,
-        days_until_expiry,
         fingerprint_sha256,
         host: host.to_string(),
+        issuer: name_text(cert.issuer_name()),
         key_pem,
+        not_after: cert.not_after().to_string(),
+        not_after_unix,
         self_signed,
+        subject: name_text(cert.subject_name()),
     })
 }
 
-fn days_until(not_after: &openssl::asn1::Asn1TimeRef) -> f64 {
-    let now = openssl::asn1::Asn1Time::days_from_now(0).expect("asn1 time");
-    let diff = now.diff(not_after).expect("asn1 diff");
-    diff.days as f64 + (diff.secs as f64 / 86_400.0)
+/// `CN=example, O=Org` style rendering of an X.509 name, in
+/// certificate order. Unconvertible entries render as `?`.
+fn name_text(name: &openssl::x509::X509NameRef) -> String {
+    name.entries()
+        .map(|entry| {
+            let key = entry.object().nid().short_name().unwrap_or("?");
+            let value = entry.data().to_string().unwrap_or_else(|_| "?".to_string());
+            format!("{key}={value}")
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+fn unix_seconds(time: &openssl::asn1::Asn1TimeRef) -> Result<i64, openssl::error::ErrorStack> {
+    let epoch = openssl::asn1::Asn1Time::from_unix(0)?;
+    let diff = epoch.diff(time)?;
+    Ok(i64::from(diff.days) * 86_400 + i64::from(diff.secs))
 }
 
 /// Generate (or reuse) the self-signed fallback certificate for a
@@ -431,6 +479,51 @@ mod tests {
             first.fingerprint_sha256,
             "existing pair must be reused"
         );
+    }
+
+    fn expired_entry() -> CertEntry {
+        let key_pair = rcgen::KeyPair::generate_for(&rcgen::PKCS_ECDSA_P256_SHA256).unwrap();
+        let mut params = rcgen::CertificateParams::new(vec!["old.test".to_string()]).unwrap();
+        params.distinguished_name = {
+            let mut name = rcgen::DistinguishedName::new();
+            name.push(rcgen::DnType::CommonName, "old.test");
+            name
+        };
+        params.not_before = time::OffsetDateTime::now_utc() - time::Duration::days(30);
+        params.not_after = time::OffsetDateTime::now_utc() - time::Duration::days(2);
+        let cert = params.self_signed(&key_pair).unwrap();
+        entry_from_pem(
+            "old.test",
+            cert.pem().into_bytes(),
+            key_pair.serialize_pem().into_bytes(),
+            true,
+        )
+        .unwrap()
+    }
+    #[test]
+    fn adversarial_expired_cert_reports_negative_expiry() {
+        let entry = expired_entry();
+        let seconds = entry.expiry_seconds();
+        assert!(
+            (-3 * 86_400..-86_400).contains(&seconds),
+            "expired two days ago, got {seconds}s"
+        );
+        let store = CertStore {
+            entries: BTreeMap::from([("old.test".to_string(), entry)]),
+        };
+        let item = &store.inventory()[0];
+        assert!(item.days_until_expiry < -1.0);
+        assert_eq!(item.expiry_seconds.signum(), -1);
+    }
+
+    #[test]
+    fn validation_cert_metadata_matches_certificate() {
+        let entry = expired_entry();
+        assert_eq!(entry.subject, "CN=old.test");
+        assert_eq!(entry.issuer, entry.subject, "self-signed");
+        let parsed = X509::from_pem(&entry.cert_pem).unwrap();
+        assert_eq!(entry.not_after, parsed.not_after().to_string());
+        assert!(entry.not_after.ends_with("GMT"), "{}", entry.not_after);
     }
 
     /// One real loopback handshake through the accounting hooks

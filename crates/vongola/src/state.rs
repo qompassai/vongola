@@ -122,10 +122,16 @@ impl State {
         let mut gauges: Vec<(String, String, f64)> = Vec::new();
         if let Ok(certs) = self.certs.read() {
             for entry in certs.inventory() {
+                let labels = format!("host=\"{}\"", crate::metrics::escape_label(&entry.host));
                 gauges.push((
                     "vongola_cert_days_until_expiry".to_string(),
-                    format!("host=\"{}\"", entry.host),
+                    labels.clone(),
                     entry.days_until_expiry,
+                ));
+                gauges.push((
+                    "vongola_cert_expiry_seconds".to_string(),
+                    labels,
+                    entry.expiry_seconds as f64,
                 ));
             }
         }

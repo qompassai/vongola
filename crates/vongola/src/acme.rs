@@ -1599,7 +1599,9 @@ pub fn group_needs_certificate(state: &State, domains: &[String]) -> bool {
         match store.get(domain) {
             None => return true,
             Some(entry) => {
-                if entry.self_signed || entry.days_until_expiry < RENEW_THRESHOLD_DAYS {
+                if entry.self_signed
+                    || entry.expiry_seconds() as f64 / 86_400.0 < RENEW_THRESHOLD_DAYS
+                {
                     return true;
                 }
                 fingerprints.push(entry.fingerprint_sha256.as_str());
