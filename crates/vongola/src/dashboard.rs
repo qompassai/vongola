@@ -57,6 +57,7 @@ pub fn state_json(state: &Arc<State>) -> serde_json::Value {
         .iter()
         .map(|route| {
             serde_json::json!({
+                "additional_hosts": route.additional_hosts.clone(),
                 "chain": route.chain.iter().map(|hop| {
                     serde_json::json!({
                         "address": hop.address.clone().unwrap_or_else(|| config.tor.socks_addr.clone()),

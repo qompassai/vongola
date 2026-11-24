@@ -18,6 +18,10 @@
 # #################################################################
 
 [workspace]
+# crates/vongola-mcp (the read-only operator MCP client) is a
+# member but not a default member: a plain `cargo build` and the
+# flake's package build compile vongola alone, unchanged. Build
+# it with `cargo build -p vongola-mcp` (or `--workspace`).
 default-members = ["crates/vongola"]
 # crates/vongola-ech is a workspace member with its own version
 # (D-302) so it can be published to crates.io in its own right —
@@ -26,7 +30,7 @@ default-members = ["crates/vongola"]
 # default member: it only builds against OpenSSL >= 4.0, while
 # the default build targets the system OpenSSL. Build it with
 # `cargo build -p vongola-ech` in an OpenSSL 4 environment.
-members = ["crates/vongola", "crates/vongola-ech"]
+members = ["crates/vongola", "crates/vongola-ech", "crates/vongola-mcp"]
 resolver = "2"
 
 [workspace.package]
