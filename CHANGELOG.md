@@ -24,6 +24,14 @@ date-stamped tag series is retired as historical snapshots).
   certificate serving, per-route `content_security_policy` — is
   unchanged.
 
+## [1.1.0] - 2026-11-27
+
+### Added
+
+- `vongola-mcp` 1.1.0: First publication to the MCP Registry as `ai.qompass/vongola` (Registry onboarding scoped by the release sweep record, ~/workspace/release-sweep-20261127/RECORD.md, held item 7). server.json's server version now tracks the `vongola-mcp` package release (1.1.0); the core `vongola` crate line (0.2.0) is unchanged and releases separately.
+- `crates/vongola-mcp/README.md` added, carrying the `mcp-name: ai.qompass/vongola` ownership marker the Registry verifies against the crates.io package.
+- No tool-surface or behaviour change in `vongola-mcp` from 1.0.1.
+
 ## [1.0.0] - 2026-11-15
 
 First stable release of the clean-room implementation.
