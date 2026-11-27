@@ -24,6 +24,10 @@ date-stamped tag series is retired as historical snapshots).
   certificate serving, per-route `content_security_policy` — is
   unchanged.
 
+## [1.1.1] - 2026-11-27
+
+- `vongola-mcp`: crates.io README fix: the 1.1.0 publish's registry metadata carried the README filename instead of its content, so crates.io rendered the literal text "README.md" and the MCP Registry ownership check could not find the `mcp-name:` marker. This patch re-publishes with the README content carried correctly. No code or tool-surface change.
+
 ## [1.1.0] - 2026-11-27
 
 ### Added
